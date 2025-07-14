@@ -1,0 +1,13 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/AkkuratStd-Bold.ttf",
+      "sha1": "112598aebe7db3276cc372b9e7d392ff01927854"
+    },
+    {
+      "path": "src/assets/fonts/AkkuratStd.ttf",
+      "sha1": "e52aaf779fb16223bd2088988ba9dfc967e94d81"
+    }
+  ]
+}
