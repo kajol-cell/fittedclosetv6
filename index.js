@@ -7,7 +7,7 @@ import AppEntry from './AppEntry';
 import {name as appName} from './app.json';
 import RNRestart from 'react-native-restart';
 
-// Global error handler
+
 ErrorUtils.setGlobalHandler(error => {
   console.error('Global Error:', error);
   Alert.alert(
