@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import React from 'react';
 import backArrow from '../assets/images/backArrow.png';
-import ThemeStyle from '../utils/ThemeStyle';
-import COLORS from '../utils/colors';
+import ThemeStyle from '../const/ThemeStyle';
+import COLORS from '../const/colors';
 
 import {useNavigation} from '@react-navigation/native';
 

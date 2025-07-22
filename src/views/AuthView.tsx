@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import COLORS from '../const/colors';
 import BottomOptionsModal from '../components/BottomOptionModal';
+import ThemeStyle from '../const/ThemeStyle';
 const { TikTokEventsManager } = NativeModules;
 const { width, height } = Dimensions.get('window');
 
@@ -149,9 +150,11 @@ const AuthView: React.FC = () => {
         ).finally(() => setLoading(false));
     };
 
-    const googleCancel = (info: any) => {
-        console.log('Google Sign In : ', info);
+
+    const googleCancel = () => {
+        console.log("Cancelled");
     };
+
 
     const googleError = (error: any) => {
         console.log('Google Sign In : ', error);
@@ -171,9 +174,10 @@ const AuthView: React.FC = () => {
                 showsHorizontalScrollIndicator={false}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
+                style={{ width }}
             >
                 {slides.map((slide, index) => (
-                    <View key={index} style={styles.slide}>
+                    <View key={index} style={styles.slidewrap}>
                         <FastImage
                             source={slide.image}
                             style={styles.slideImage}
@@ -216,15 +220,19 @@ const AuthView: React.FC = () => {
                     onError={googleError}
                     onCancel={googleCancel}
                 />
-                <TouchableOpacity onPress={() => setShowOptionsModal(true)}>
-                    <Text style={styles.otherOptionsText}>Other options</Text>
+                <TouchableOpacity onPress={() => setShowOptionsModal(true)}
+                    style={styles.termsContainer}
+                >
+                    <Text style={[ThemeStyle.H4, ThemeStyle.textBold,
+                    { color: COLORS.secondaryDarker }]}>Other options</Text>
                 </TouchableOpacity>
                 <View style={styles.termsContainer}>
-                    <Text style={styles.termsText}>
+                    <Text style={[ThemeStyle.body2, { color: COLORS.secondaryDarker }]}>
                         By continuing you agree to the
                     </Text>
-                    <Text style={styles.termsLinks}>
-                        Terms of Service  <Text style={styles.andText}>and </Text> Privacy Policy
+                    <Text style={[ThemeStyle.body2, ThemeStyle.textBold, { color: COLORS.secondaryDarker }]}>
+                        Terms of Service  <Text style={[ThemeStyle.body2, ThemeStyle.text]}>and
+                        </Text> Privacy Policy
                     </Text>
                 </View>
                 <BottomOptionsModal
@@ -245,17 +253,17 @@ const AuthView: React.FC = () => {
 
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={ThemeStyle.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <LoadingWrapper
                 loading={loading}
                 content={
-                    <View style={[styles.mainContainer, { paddingTop: insets.top + 8 }]}>
+                    <View style={[ThemeStyle.mainContainer, { paddingTop: insets.top + 8 }]}>
                         {renderProgressIndicator()}
 
                         <View style={styles.contentContainer}>
                             {renderSlides()}
-                            <Text style={styles.mainTitle} numberOfLines={2}>
+                            <Text style={ThemeStyle.H2} numberOfLines={2}>
                                 {slides[currentSlide].title}
                             </Text>
                         </View>
@@ -272,28 +280,30 @@ const AuthView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-    },
-    mainContainer: {
-        flex: 1,
-        paddingHorizontal: 20,
-    },
+    // container: {
+    //     flex: 1,
+    //     backgroundColor: '#FFFFFF',
+    // },
+    // mainContainer: {
+    //     flex: 1,
+    //     paddingHorizontal: 20,
+    // },
     contentContainer: {
-        bottom:2,
+        bottom: 2,
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 16,
     },
-    slide: {
-        width: width - 45,
+    slidewrap: {
+        // width: width - 45,
         justifyContent: 'center',
         alignSelf: 'center',
         bottom: Dimensions.get('window').height * 0.01
     },
     slideImage: {
-        width: width - 45,
-        height: 350,
+        // width: width - 45,
+        height: height * 0.5,
+        aspectRatio: 1 / 1.1,
         alignSelf: 'center',
         resizeMode: 'contain'
     },
@@ -303,27 +313,9 @@ const styles = StyleSheet.create({
     },
     termsContainer: {
         alignItems: 'center',
-        marginTop:12
+        marginTop: 12
     },
-    termsText: {
-        fontSize: 14,
-        color: '#999999',
-        textAlign: 'center',
-        fontFamily: 'SFPRODISPLAYBOLD',
-    },
-    termsLinks: {
-        fontSize: 13,
-        color: COLORS.nonPrimary,
-        textAlign: 'center',
-        opacity:0.7,
-        fontFamily: 'SFPRODISPLAYBOLD',
-    },
-    andText: {
-        fontSize: 13,
-        color: '#999999',
-        textAlign: 'center',
-        fontFamily: 'SFPRODISPLAYBOLD',
-    },
+
     progressContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -338,31 +330,18 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
     },
     activeDot: {
-        backgroundColor: COLORS.Black,
-        width: 39, height: 2.5,
+        backgroundColor: COLORS.primary,
+        width: 39, height: 2,
         borderRadius: 10, opacity: 0.7
     },
     inactiveDot: {
         backgroundColor: '#E5E5E5',
         width: 20,
-        height: 2.5,
+        height: 2,
         borderRadius: 4,
         marginHorizontal: 4,
     },
-    mainTitle: {
-        fontSize: 28,
-        color: COLORS.Black,
-        textAlign: 'center',
-        marginBottom:16,
-        fontFamily: 'SFPRODISPLAYBOLD',
-        width: '60%'
-    },
-    otherOptionsText: {
-        fontSize: 16,
-        color: 'gray',
-        fontFamily: 'SFPRODISPLAYBOLD',
-        marginTop:Dimensions.get('window').height * 0.02
-    },
+    
 });
 
 export default AuthView;

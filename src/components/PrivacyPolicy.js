@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import React from 'react';
 import HeaderOne from '../components/HeaderOne';
-import ThemeStyle from '../utils/ThemeStyle';
+import ThemeStyle from '../const/ThemeStyle';
 
 const PrivacyPolicy = () => {
   return (

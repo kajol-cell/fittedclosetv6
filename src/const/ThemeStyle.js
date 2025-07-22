@@ -4,12 +4,29 @@ import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const ThemeStyle = StyleSheet.create({
+  // container: {
+  //       flex: 1,
+  //       backgroundColor: '#FFFFFF',
+  //   },
+  //   mainContainer: {
+  //       flex: 1,
+  //       paddingHorizontal: 20,
+  //   },
+  //   contentContainer: {
+  //       bottom: 2,
+  //       justifyContent: 'center',
+  //       alignItems: 'center',
+  //       marginBottom: 16,
+  //   },
+
   container: {
     backgroundColor: COLORS.white,
     flex: 1,
-    width: width,
-    height: height,
     paddingHorizontal: width * 0.05,
+  },  
+  mainContainer: {
+    backgroundColor: COLORS.white,
+    flex: 1,
   },
   contentContainerStyle: {
     flexGrow: 1,
@@ -58,11 +75,6 @@ const ThemeStyle = StyleSheet.create({
     paddingHorizontal: width * 0.08,
     position: 'relative',
   },
-  mainContainer: {
-    backgroundColor: COLORS.white,
-    // height: height
-    flex: 1,
-  },
   containerView: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -88,61 +100,64 @@ const ThemeStyle = StyleSheet.create({
   },
 
   text: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
+  },
+  textBold: {
+    fontFamily: 'SFPRODISPLAYBOLD',
   },
   H1: {
-    fontFamily: 'AkkuratStd-Bold',
+    fontFamily: 'SFPRODISPLAYMEDIUM',
     lineHeight: 48,
     fontSize: 36,
   },
   H2: {
-    fontFamily: 'AkkuratStd-Bold',
+    fontFamily: 'SFPRODISPLAYBOLD',
     lineHeight: 32,
-    fontSize: 24,
+    fontSize: 28,
   },
   H3: {
-    fontFamily: 'AkkuratStd-Bold',
+    fontFamily: 'SFPRODISPLAYMEDIUM',
     lineHeight: 24,
     fontSize: 20,
   },
   H4: {
-    fontFamily: 'AkkuratStd-Bold',
+    fontFamily: 'SFPRODISPLAYMEDIUM',
     lineHeight: 24,
-    fontSize: 16,
+    fontSize: 18,
   },
   H5: {
-    fontFamily: 'AkkuratStd-Bold',
+    fontFamily: 'SFPRODISPLAYMEDIUM',
     lineHeight: 24,
     fontSize: 13,
   },
   body0: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
     lineHeight: 24,
     fontSize: 20,
   },
   body1: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
     lineHeight: 24,
     fontSize: 18,
   },
   body2: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
     lineHeight: 18,
     fontSize: 16,
   },
   body3: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
     lineHeight: 15,
     fontSize: 13,
   },
   body4: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
     lineHeight: 15,
     fontSize: 10,
   },
 
   body5: {
-    fontFamily: 'AkkuratStd',
+    fontFamily: 'SFPRODISPLAYREGULAR',
     lineHeight: 15,
     fontSize: 14,
   },
