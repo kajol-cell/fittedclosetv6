@@ -1,1 +1,368 @@
-import React, {useEffect, useState} from 'react';import {useTheme} from 'react-native-paper';import {View, StyleSheet, TouchableOpacity, Alert} from 'react-native';import {Text} from 'react-native-paper';import Icon from 'react-native-vector-icons/MaterialIcons';import EmailInput from '../components/EmailInput';import PhoneInput from '../components/PhoneInput';import GoogleSignInButton from '../components/GoogleSignInButton';import AppleSignInButton from '../components/AppleSignInButton';import VerifyCode from '../components/VerifyCode';import {getClientType, isIOS} from '../utils/platformUtils';import {navigate} from '../navigation/navigationService';import {ApiMessageType, ScreenType} from '../utils/enums';import {dispatchMessageTypeThunk, dispatchThunk} from '../utils/reduxUtils';import {useDispatch} from 'react-redux';import {   thirdPartyAuthenticate,   sendCode,   verifyCode,} from '../redux/features/authSlice';import {   setAuthInfo,   setVerificationToken,} from '../redux/features/sessionSlice';import LoadingWrapper from '../components/LoadingWrapper';import {identifyUserFromProfile, trackLogin, trackSignup} from '../lib/analytics';import {NativeModules} from 'react-native';const {TikTokEventsManager} = NativeModules;function handleTracking(authInfo, authMethod) {   console.log('handleTracking', authInfo);   identifyUserFromProfile(authInfo.profile, authMethod, authInfo.newUser);   if (authInfo.newUser) {      trackSignup(authMethod);   }   else {      trackLogin(authMethod);   }   TikTokEventsManager?.logEvent('login', {      method: authMethod,      email_address: authInfo.profile.email,    });   const profile = authInfo.profile;   if (profile) {      TikTokEventsManager.logout();      TikTokEventsManager?.identify(String(profile.id), profile.email, profile.phoneCountryCode + profile.phoneNumber, profile.email);   }}const AuthView = () => {   const {colors} = useTheme();   const dispatch = useDispatch();   const [status, setStatus] = useState('');   const [loading, setLoading] = useState(false);   const [authMethod, setAuthMethod] = useState('email');   const [isCodeSent, setIsCodeSent] = useState(false);   const [email, setEmail] = useState('');   const [phone, setPhone] = useState('');   const handleAppError = error => {      Alert.alert(error.message);   };   const handleLoginWithApple = async userInfo => {      console.log(userInfo);      setLoading(true);      dispatchMessageTypeThunk(         thirdPartyAuthenticate,         {            clientType: getClientType(),            thirdPartyJwt: userInfo.identityToken,            thirdPartyLoginType: 'APPLE',         },         arg => {            handleTracking(arg, 'APPLE');            navigate(ScreenType.MAIN);         },         error => {            navigate(ScreenType.ENTRY);            Alert.alert('Login failed', error.message);         },      ).finally(() => setLoading(false));   };   const handleLoginWithGoogle = async userInfo => {      setLoading(true);      dispatchMessageTypeThunk(         thirdPartyAuthenticate,         {            clientType: getClientType(),            thirdPartyJwt: userInfo.idToken,            thirdPartyLoginType: 'GOOGLE',         },         arg => {            handleTracking(arg, 'GOOGLE');            navigate(ScreenType.MAIN);         },         error => {            navigate(ScreenType.ENTRY);            Alert.alert('Login failed', error.message);         },      ).finally(() => setLoading(false));   };   const submitEmail = async emailValue => {      console.log('Email submitted:', emailValue);      setEmail(emailValue);      await dispatchThunk(         sendCode,         ApiMessageType.SEND_EMAIL_CODE,         {email: emailValue},         () => setIsCodeSent(true),         error => {            Alert.alert('Login failed', error.message);         },      );   };   const submitPhone = async phoneValue => {      console.log('Phone submitted:', phoneValue);      setPhone(phoneValue);      await dispatchThunk(         sendCode,         ApiMessageType.SEND_PHONE_CODE,         {phone: phoneValue},         () => setIsCodeSent(true),         error => {            Alert.alert('Login failed', error.message);         },      );   };   const handleVerifyCode = async code => {      console.log('Verifying code:', code);      setLoading(true);      dispatchThunk(         verifyCode,         authMethod === 'email'            ? ApiMessageType.VERIFY_EMAIL_CODE            : ApiMessageType.VERIFY_PHONE_CODE,         {code},         arg => {            dispatch(setVerificationToken(arg.verificationToken));            let authInfo = arg.authInfo;            dispatch(setAuthInfo(authInfo));            handleTracking(authInfo, authMethod);            navigate(ScreenType.MAIN);         },         error => {            console.error('Code verification failed:', error);            Alert.alert('Code verification failed', error);         },      ).finally(() => setLoading(false));   };   const resendCode = () => {      console.log('Code resent');      authMethod === 'email' ? submitEmail(email) : submitPhone(phone);   };   const googleCancel = info => {      console.log('Google Sign In : ', info);   };   const googleError = error => {      console.log('Google Sign In : ', error);   };   return (      <LoadingWrapper         loading={loading}         content={            isCodeSent ? (               <View>                  <Text                     style={{                        fontSize: 16,                        fontWeight: 'bold',                        marginTop: 20,                        marginBottom: 5,                     }}>                     Please enter the code sent to your{' '}                     {authMethod === 'email' ? 'Email' : 'Phone'}                  </Text>                  <VerifyCode                     onVerifyCode={code => {                        handleVerifyCode(code);                     }}                     onResendCode={() => resendCode()}                     status={status}                  />               </View>            ) : (               <View>                  {}                  <Text                     style={{                        fontSize: 16,                        fontWeight: 'bold',                        marginTop: 20,                        marginBottom: 5,                     }}>                     Please enter                  </Text>                  <View style={styles.selectionContainer}>                     <TouchableOpacity                        onPress={() => setAuthMethod('email')}                        style={[                           styles.option,                           authMethod === 'email' && styles.selectedOption,                        ]}>                        <Icon                           name="email"                           size={32}                           color={authMethod === 'email' ? colors.primary : colors.gray}                        />                        <Text style={styles.optionText}>Email</Text>                     </TouchableOpacity>                     <TouchableOpacity                        onPress={() => setAuthMethod('phone')}                        style={[                           styles.option,                           authMethod === 'phone' && styles.selectedOption,                        ]}>                        <Icon                           name="phone"                           size={32}                           color={authMethod === 'phone' ? colors.primary : colors.gray}                        />                        <Text style={styles.optionText}>Phone</Text>                     </TouchableOpacity>                  </View>                  <View style={styles.inputContainer}>                     {authMethod === 'email' ? (                        <EmailInput onSubmit={email => submitEmail(email)}/>                     ) : (                        <PhoneInput onSubmit={phone => submitPhone(phone)}/>                     )}                  </View>                  {}                  <Text style={styles.orSeparator}>──────── or ────────</Text>                  {}                  <Text                     style={{                        fontSize: 16,                        fontWeight: 'bold',                        textAlign: 'left',                        marginBottom: 10,                     }}>                     Continue with                  </Text>                  <View style={{padding: 10}}>                     <GoogleSignInButton                        style={{marginBottom: 10}}                        onSuccess={handleLoginWithGoogle}                        onError={googleError}                        onCancel={googleCancel}                     />                     {isIOS() && (<AppleSignInButton                        onSuccess={handleLoginWithApple}                        onError={handleAppError}                     />)}                  </View>               </View>            )         }      />   );};export default AuthView;const styles = StyleSheet.create({   container: {      flex: 1,      padding: 20,      justifyContent: 'center',      backgroundColor: '#f5f5f5',   },   selectionContainer: {      flexDirection: 'row',      justifyContent: 'center',      marginBottom: 20,   },   option: {      alignItems: 'center',      marginHorizontal: 20,      paddingVertical: 10,   },   selectedOption: {      borderBottomWidth: 2,      borderBottomColor: 'blue',   },   inputContainer: {      width: '100%',      marginBottom: 20,   },   orSeparator: {      fontSize: 16,      fontWeight: 'bold',      color: '#777',      textAlign: 'center',      marginVertical: 20,   },   socialContainer: {      flexDirection: 'column',      alignItems: 'center',      width: '100%',      justifyContent: 'center',    },   socialButton: {      width: '100%',       marginVertical: 10,      paddingHorizontal: 20,   },});
+import React, { useState } from 'react';
+import {
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    Alert,
+    Text,
+    SafeAreaView,
+    StatusBar,
+    Dimensions,
+    Platform,
+    ScrollView,
+} from 'react-native';
+import { useDispatch } from 'react-redux';
+import { NativeModules } from 'react-native';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import AppleSignInButton from '../components/AppleSignInButton';
+import LoadingWrapper from '../components/LoadingWrapper';
+import { getClientType, isIOS } from '../utils/platformUtils';
+import { navigate } from '../navigation/navigationService';
+import { ApiMessageType, ScreenType } from '../utils/enums';
+import { dispatchMessageTypeThunk, dispatchThunk } from '../utils/reduxUtils';
+import {
+    thirdPartyAuthenticate,
+    sendCode
+} from '../redux/features/authSlice';
+import { identifyUserFromProfile, trackLogin, trackSignup } from '../lib/analytics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FastImage from 'react-native-fast-image';
+import COLORS from '../const/colors';
+import BottomOptionsModal from '../components/BottomOptionModal';
+const { TikTokEventsManager } = NativeModules;
+const { width, height } = Dimensions.get('window');
+
+interface AuthInfo {
+    profile: {
+        id: string;
+        email: string;
+        phoneCountryCode: string;
+        phoneNumber: string;
+    };
+    newUser: boolean;
+}
+
+interface UserInfo {
+    identityToken?: string;
+    idToken?: string;
+}
+
+const handleTracking = (authInfo: AuthInfo, authMethod: string) => {
+    console.log('handleTracking', authInfo);
+    identifyUserFromProfile(authInfo.profile, authMethod, authInfo.newUser);
+    if (authInfo.newUser) {
+        trackSignup(authMethod);
+    } else {
+        trackLogin(authMethod);
+    }
+    TikTokEventsManager?.logEvent('login', {
+        method: authMethod,
+        email_address: authInfo.profile.email,
+    });
+    const profile = authInfo.profile;
+    if (profile) {
+        TikTokEventsManager.logout();
+        TikTokEventsManager?.identify(
+            String(profile.id),
+            profile.email,
+            profile.phoneCountryCode + profile.phoneNumber,
+            profile.email,
+        );
+    }
+};
+
+const slides = [
+    {
+        title: "Organize all \n your clothes",
+        image: require('../assets/images/onboardclothes.png'),
+    },
+    {
+        title: "Style outfits\nfrom your closet",
+        image: require('../assets/images/slide2.png'),
+    },
+    {
+        title: "Resell pieces you don't wear",
+        image: require('../assets/images/slide3.png'),
+    },
+    {
+        title: "Share your closet with friends",
+        image: require('../assets/images/slide4.png'),
+    }
+];
+
+const AuthView: React.FC = () => {
+    const insets = useSafeAreaInsets();
+    const dispatch = useDispatch();
+    const [status, setStatus] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
+    const [isCodeSent, setIsCodeSent] = useState<boolean>(false);
+    const [email, setEmail] = useState<string>('');
+    const [phone, setPhone] = useState<string>('');
+    const [currentSlide, setCurrentSlide] = useState<number>(0);
+    const [showOptionsModal, setShowOptionsModal] = useState(false);
+
+
+    const handleAppError = (error: any) => {
+        Alert.alert(error.message);
+    };
+
+    const handleLoginWithApple = async (userInfo: UserInfo) => {
+        console.log(userInfo);
+        setLoading(true);
+
+        dispatchMessageTypeThunk(
+            thirdPartyAuthenticate,
+            {
+                clientType: getClientType(),
+                thirdPartyJwt: userInfo.identityToken,
+                thirdPartyLoginType: 'APPLE',
+            },
+            (arg: any) => {
+                handleTracking(arg, 'APPLE');
+                navigate(ScreenType.MAIN);
+            },
+            (error: any) => {
+                navigate(ScreenType.ENTRY);
+                Alert.alert('Login failed', error.message);
+            },
+        ).finally(() => setLoading(false));
+    };
+
+    const handleLoginWithGoogle = async (userInfo: UserInfo) => {
+        setLoading(true);
+        dispatchMessageTypeThunk(
+            thirdPartyAuthenticate,
+            {
+                clientType: getClientType(),
+                thirdPartyJwt: userInfo.idToken,
+                thirdPartyLoginType: 'GOOGLE',
+            },
+            (arg: any) => {
+                handleTracking(arg, 'GOOGLE');
+                navigate(ScreenType.MAIN);
+            },
+            (error: any) => {
+                navigate(ScreenType.ENTRY);
+                Alert.alert('Login failed', error.message);
+            },
+        ).finally(() => setLoading(false));
+    };
+
+    const googleCancel = (info: any) => {
+        console.log('Google Sign In : ', info);
+    };
+
+    const googleError = (error: any) => {
+        console.log('Google Sign In : ', error);
+    };
+
+    const handleScroll = (event: any) => {
+        const slideWidth = width;
+        const currentIndex = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
+        setCurrentSlide(currentIndex);
+    };
+
+    const renderSlides = () => {
+        return (
+            <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+            >
+                {slides.map((slide, index) => (
+                    <View key={index} style={styles.slide}>
+                        <FastImage
+                            source={slide.image}
+                            style={styles.slideImage}
+                            resizeMode='contain'
+                        />
+                    </View>
+                ))}
+            </ScrollView>
+        );
+    };
+
+    const renderProgressIndicator = () => {
+        return (
+            <View style={styles.progressContainer}>
+                {slides.map((_, index) => (
+                    <View
+                        key={index}
+                        style={[
+                            styles.progressDot,
+                            index === currentSlide ? styles.activeDot : styles.inactiveDot,
+                        ]}
+                    />
+                ))}
+            </View>
+        );
+    };
+
+    const renderSocialButtons = () => {
+        return (
+            <View style={styles.socialButtonsContainer}>
+                {/* {isIOS() && ( */}
+                <AppleSignInButton
+                    onSuccess={handleLoginWithApple}
+                    onError={handleAppError}
+                />
+                {/* )} */}
+
+                <GoogleSignInButton
+                    onSuccess={handleLoginWithGoogle}
+                    onError={googleError}
+                    onCancel={googleCancel}
+                />
+                <TouchableOpacity onPress={() => setShowOptionsModal(true)}>
+                    <Text style={styles.otherOptionsText}>Other options</Text>
+                </TouchableOpacity>
+                <View style={styles.termsContainer}>
+                    <Text style={styles.termsText}>
+                        By continuing you agree to the
+                    </Text>
+                    <Text style={styles.termsLinks}>
+                        Terms of Service  <Text style={styles.andText}>and </Text> Privacy Policy
+                    </Text>
+                </View>
+                <BottomOptionsModal
+                    visible={showOptionsModal}
+                    onClose={() => setShowOptionsModal(false)}
+                    onSelectEmail={() => {
+                        setAuthMethod('email');
+                        setShowOptionsModal(false);
+                    }}
+                    onSelectPhone={() => {
+                        setAuthMethod('phone');
+                        setShowOptionsModal(false);
+                    }}
+                />
+            </View>
+        );
+    };
+
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <LoadingWrapper
+                loading={loading}
+                content={
+                    <View style={[styles.mainContainer, { paddingTop: insets.top + 8 }]}>
+                        {renderProgressIndicator()}
+
+                        <View style={styles.contentContainer}>
+                            {renderSlides()}
+                            <Text style={styles.mainTitle} numberOfLines={2}>
+                                {slides[currentSlide].title}
+                            </Text>
+                        </View>
+
+                        <View >
+                            {renderSocialButtons()}
+                        </View>
+                    </View>
+                }
+            />
+
+        </SafeAreaView>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    mainContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    contentContainer: {
+        bottom:2,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    slide: {
+        width: width - 45,
+        justifyContent: 'center',
+        alignSelf: 'center',
+        bottom: Dimensions.get('window').height * 0.01
+    },
+    slideImage: {
+        width: width - 45,
+        height: 350,
+        alignSelf: 'center',
+        resizeMode: 'contain'
+    },
+    socialButtonsContainer: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    termsContainer: {
+        alignItems: 'center',
+        marginTop:12
+    },
+    termsText: {
+        fontSize: 14,
+        color: '#999999',
+        textAlign: 'center',
+        fontFamily: 'SFPRODISPLAYBOLD',
+    },
+    termsLinks: {
+        fontSize: 13,
+        color: COLORS.nonPrimary,
+        textAlign: 'center',
+        opacity:0.7,
+        fontFamily: 'SFPRODISPLAYBOLD',
+    },
+    andText: {
+        fontSize: 13,
+        color: '#999999',
+        textAlign: 'center',
+        fontFamily: 'SFPRODISPLAYBOLD',
+    },
+    progressContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        marginTop: Platform.OS === 'ios' ? 10 : 20,
+    },
+    progressDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginHorizontal: 4,
+    },
+    activeDot: {
+        backgroundColor: COLORS.Black,
+        width: 39, height: 2.5,
+        borderRadius: 10, opacity: 0.7
+    },
+    inactiveDot: {
+        backgroundColor: '#E5E5E5',
+        width: 20,
+        height: 2.5,
+        borderRadius: 4,
+        marginHorizontal: 4,
+    },
+    mainTitle: {
+        fontSize: 28,
+        color: COLORS.Black,
+        textAlign: 'center',
+        marginBottom:16,
+        fontFamily: 'SFPRODISPLAYBOLD',
+        width: '60%'
+    },
+    otherOptionsText: {
+        fontSize: 16,
+        color: 'gray',
+        fontFamily: 'SFPRODISPLAYBOLD',
+        marginTop:Dimensions.get('window').height * 0.02
+    },
+});
+
+export default AuthView;

@@ -58,6 +58,24 @@
 		<string>Octicons.ttf</string>
 		<string>AkkuratStd-Bold.ttf</string>
 		<string>AkkuratStd.ttf</string>
+		<string>SFPRODISPLAYBLACKITALIC.OTF</string>
+		<string>SFPRODISPLAYBOLD.OTF</string>
+		<string>SFPRODISPLAYHEAVYITALIC.OTF</string>
+		<string>SFPRODISPLAYLIGHTITALIC.OTF</string>
+		<string>SFPRODISPLAYMEDIUM.OTF</string>
+		<string>SFPRODISPLAYREGULAR.OTF</string>
+		<string>SFPRODISPLAYSEMIBOLDITALIC.OTF</string>
+		<string>SFPRODISPLAYTHINITALIC.OTF</string>
+		<string>SFPRODISPLAYULTRALIGHTITALIC.OTF</string>
+		<string>SFPRODISPLAYBOLD.ttf</string>
+		<string>SFPRODISPLAYBLACKITALIC.ttf</string>
+		<string>SFPRODISPLAYHEAVYITALIC.ttf</string>
+		<string>SFPRODISPLAYLIGHTITALIC.ttf</string>
+		<string>SFPRODISPLAYMEDIUM.ttf</string>
+		<string>SFPRODISPLAYREGULAR.ttf</string>
+		<string>SFPRODISPLAYSEMIBOLDITALIC.ttf</string>
+		<string>SFPRODISPLAYTHINITALIC.ttf</string>
+		<string>SFPRODISPLAYULTRALIGHTITALIC.ttf</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

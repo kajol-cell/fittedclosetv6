@@ -1,5 +1,5 @@
 ENVIRONMENT=development
-SERVER_URL=https://fitted-closet-sandbox.appspot.com/
+SERVER_URL=https://fitted-closet-sandbox.appspot.com
 PIECE_IMAGE_URL=https://fitted-closet-sandbox.appspot.com/pieceImage/
 REVENUE_CAT_IOS_API_KEY=appl_LEaLRzXZLSckkEfPoRZoRWMTzQR
 REVENUE_CAT_ANDROID_API_KEY=goog_hPKCLgfajqEJdkaiARAoaQgqCTZ
