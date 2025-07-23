@@ -73,7 +73,6 @@ const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
     };
 
     const submitEmail = async (emailValue: string) => {
-        setLoading(true);
         await dispatchThunk(
             sendCode,
             ApiMessageType.SEND_EMAIL_CODE,

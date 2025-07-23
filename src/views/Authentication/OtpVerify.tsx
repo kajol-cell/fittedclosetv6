@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     View,
     Text,
@@ -48,6 +48,8 @@ const handleTracking = (authInfo: AuthInfo, authMethod: string) => {
 const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const dispatch = useDispatch();
     const { phoneNumber, countryCode, email } = route.params || {};
+    console.log(route.params, 'route.params>>>>>>>>')
+
     const isPhoneVerification = !!phoneNumber;
     const isEmailVerification = !!email;
     const [contactInfo, setContactInfo] = useState(isPhoneVerification ? phoneNumber : email || '');
@@ -57,77 +59,82 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const [status, setStatus] = useState('');
     const [isValid, setIsValid] = useState(false);
     const [code, setCode] = useState(['', '', '', '', '', '']);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const verificationAttemptedRef = useRef(false);
 
-    console.log('code', code);
-    console.log('Verification type:', isPhoneVerification ? 'Phone' : 'Email');
-    console.log('Contact info:', contactInfo);
 
     useEffect(() => {
-        if (code?.every(item => item !== '')) {
+        const allFilled = code.every(item => item !== '');
+    
+        if (allFilled && !isVerifying && !loading && !verificationAttemptedRef.current) {
             setIsValid(true);
-        } else {
+            verificationAttemptedRef.current = true;
+            setIsVerifying(true);
+            handleVerifyCode();
+        } else if (!allFilled) {
             setIsValid(false);
+            verificationAttemptedRef.current = false;
+    
+            if (error) {
+                setError('');
+            }
         }
     }, [code]);
+    
 
+  
     const handleVerifyCode = async () => {
+        console.log('Verifying code:', code);
+        console.log('Route params:', route.params);
         setLoading(true);
         setError('');
-
+        
         try {
-            const messageType = isPhoneVerification
-                ? ApiMessageType.VERIFY_PHONE_CODE
-                : ApiMessageType.VERIFY_EMAIL_CODE;
-
-            const payload = isPhoneVerification
-                ? { code: code.join(''), phone: contactInfo }
-                : { code: code.join(''), email: contactInfo };
-
-            await dispatchThunk(
-                verifyCode,
-                messageType,
-                payload,
-                (arg: any) => {
-                    console.log('Verification response:', arg);
-
-                    if (!arg) {
-                        console.error('No response received from verification');
-                        setError('Invalid response from server');
-                        return;
-                    }
-                    if (arg.authInfo) {
-                        let authInfo = arg.authInfo;
-                        dispatch(setAuthInfo(authInfo));
-                        const authMethod = isPhoneVerification ? 'phone' : 'email';
-                        handleTracking(authInfo, authMethod);
-                    } else if (arg.verificationToken) {
-                        dispatch(setVerificationToken(arg.verificationToken));
-                        if (arg.authInfo) {
-                            let authInfo = arg.authInfo;
-                            dispatch(setAuthInfo(authInfo));
-                            const authMethod = isPhoneVerification ? 'phone' : 'email';
-                            handleTracking(authInfo, authMethod);
-                        }
-                    } else {
-                        dispatch(setAuthInfo(arg));
-                        const authMethod = isPhoneVerification ? 'phone' : 'email';
-                        handleTracking(arg, authMethod);
-                    }
-
-                    navigate(ScreenType.MAIN);
-                },
-                (error: any) => {
-                    console.error('Code verification failed:', error);
-                    setError(error.message || 'Code verification failed');
-                },
+            const messageType = route.params.email 
+                ? ApiMessageType.VERIFY_EMAIL_CODE
+                : ApiMessageType.VERIFY_PHONE_CODE;
+            
+            console.log('Using message type:', messageType);
+            console.log('Code to verify:', code.join(''));
+            
+            const result = await dispatchThunk(
+               verifyCode,
+               messageType,
+               {code: code.join('')},
+               arg => {
+                console.log('Verification response>>>:', arg);
+                  if (arg && arg.verificationToken) {
+                      dispatch(setVerificationToken(arg.verificationToken));
+                      let authInfo = arg.authInfo;
+                      if (authInfo) {
+                          dispatch(setAuthInfo(authInfo));
+                          handleTracking(authInfo, route.params.email ? 'email' : 'phone');
+                      } else {
+                          console.error('Missing authInfo in response:', arg);
+                          setError('Invalid verification response - missing auth info');
+                      }
+                  } else {
+                      console.error('Invalid verification response:', arg);
+                      setError('Invalid verification response - missing verification token');
+                  }
+               },
+               error => {
+                  console.error('Code verification failed:', error);
+                  setError(error);
+               },
             );
-        } catch (err) {
-            console.error('Error verifying code:', err);
-            setError('An unexpected error occurred');
+            
+            if (result) {
+                console.log('Verification successful:', result);
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            setError('Verification failed. Please try again.');
         } finally {
             setLoading(false);
+            setIsVerifying(false);
         }
-    };
+     };
 
     const resendCode = async () => {
         setLoading(true);
@@ -152,9 +159,13 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                     setError('');
                 },
                 (error: any) => {
-                    console.error('Failed to resend code:', error);
-                    setError(error.message || 'Failed to resend code');
+                    console.error('Code verification failed:', error);
+                    setError(error.message || 'Invalid code, please try again.');
+                    setCode(['', '', '', '', '', '']); 
+                    setIsValid(false);
+                    verificationAttemptedRef.current = false; 
                 },
+                
             );
         } catch (err) {
             console.error('Error resending code:', err);

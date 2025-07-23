@@ -1,7 +1,3 @@
-// Updated Redux Toolkit Setup with API Utility and Component Usage
-
-// ========== src/redux/api.js ==========
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {API_CONFIG} from '../config/appConfig';
 import {Platform} from 'react-native';
@@ -11,10 +7,10 @@ export const API_URL = API_CONFIG.SERVER_URL;
 
 const AUTHENTICATE = 'AUTHENTICATE';
 
-let storeInstance = null; // Store reference
+let storeInstance = null; 
 
 export const setStore = store => {
-    storeInstance = store; // Store is set once at app startup
+    storeInstance = store; 
 };
 
 function assertHasSessionKey(messageType, sessionKey) {
@@ -34,7 +30,6 @@ function assertHasSessionKey(messageType, sessionKey) {
 
 export const callApi = async (messageType, payload) => {
     const url = `${API_URL}/api/api/send`;
-    // console.log('Request URL:', url, API_URL);
     const state = storeInstance.getState(); // Safely call getState
     const sessionKey = state.auth.apiSessionKey;
     // state.loading.isLoading = true;
@@ -44,8 +39,7 @@ export const callApi = async (messageType, payload) => {
     try {
         storeInstance.dispatch(showLoading());
         const body = JSON.stringify({messageType, sessionKey, payload});
-        //console.log('callApi', body);
-        console.log('callApi', body);
+        console.log('callApi', body, url);
         const response = await fetch(url, {
             method: 'POST',
             headers: {

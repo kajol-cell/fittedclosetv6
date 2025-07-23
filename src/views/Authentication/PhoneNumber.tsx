@@ -75,15 +75,11 @@ const PhoneNumberScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
             setError(validationError || 'Please enter a valid phone number');
             return;
         }
-
         setLoading(true);
         setError('');
-
         try {
             const fullPhoneNumber = createFullPhoneNumber(phoneNumber, countryCode);
-
             console.log('Submitting phone:', fullPhoneNumber);
-
             await dispatchThunk(
                 sendCode,
                 ApiMessageType.SEND_PHONE_CODE,

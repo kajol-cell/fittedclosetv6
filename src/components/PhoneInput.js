@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Modal,
@@ -8,10 +8,10 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {TextInput, HelperText, Button, Text} from 'react-native-paper';
-import {useSelector} from 'react-redux';
+import { TextInput, HelperText, Button, Text, IconButton } from 'react-native-paper';
+import { useSelector } from 'react-redux';
 import COLORS from '../const/colors';
-import {validatePhoneNumber, formatPhoneNumber, getPhoneValidationError} from '../utils/phoneUtils';
+import { validatePhoneNumber, formatPhoneNumber, getPhoneValidationError } from '../utils/phoneUtils';
 
 const PhoneInput = ({
   onPhoneChange,
@@ -24,27 +24,32 @@ const PhoneInput = ({
   const countryCodes = useSelector(state => state.auth.countryCodes);
   const defaultCode = countryCodes.find(
     country =>
-      country?.phoneCode === phoneData.countryCode || country?.code === 'US',
+      country?.phoneCode === phoneData.countryCode ||
+      (country?.phoneCode === '+1' && country?.code === 'US'),
   );
   const [phone, setPhone] = useState(phoneData.phone || '');
   const [selectedCountry, setSelectedCountry] = useState(defaultCode);
   const [internalError, setInternalError] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const filteredCodes = countryCodes.filter(item =>
+    item.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
 
 
   useEffect(() => {
     const isValid = validatePhoneNumber(phone, selectedCountry?.phoneCode);
     const formattedPhone = formatPhoneNumber(phone, selectedCountry?.phoneCode);
-    
+
     if (onPhoneChange) {
       onPhoneChange(formattedPhone, selectedCountry?.phoneCode);
     }
-    
+
     if (onValidationChange) {
       onValidationChange(isValid && phone.length > 0);
     }
-    
+
     if (phone.length > 0) {
       const validationError = getPhoneValidationError(phone, selectedCountry?.phoneCode);
       setInternalError(validationError || '');
@@ -92,7 +97,7 @@ const PhoneInput = ({
           activeOutlineColor={COLORS.backGroundGray}
           value={phone}
           onChangeText={handlePhoneChange}
-          outlineStyle={{borderRadius:15}}
+          outlineStyle={{ borderRadius: 15 }}
           keyboardType="phone-pad"
           autoCorrect={false}
           error={!!displayError}
@@ -103,38 +108,69 @@ const PhoneInput = ({
       {displayError ? <HelperText type="error">{displayError}</HelperText> : null}
 
       <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={countryCodes}
-              keyExtractor={item => item.code}
-              renderItem={({item}) => (
-                <TouchableOpacity
-                  style={styles.option}
-                  onPress={() => handleCountryChange(item)}>
-                  <View style={styles.optionRow}>
-                    <Image
-                      source={{
-                        uri: `https://flagcdn.com/w40/${item.code.toLowerCase()}.png`,
-                      }}
-                      style={styles.flagIcon}
-                    />
-                    <Text
-                      style={
-                        styles.optionText
-                      }>{`${item.name} (${item.phoneCode})`}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
+        <View style={styles.modalOverlay}>
+          <View style={styles.sheetContainer}>
+            <View style={styles.header}>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={styles.title}>Country Code</Text>
+              </View>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButtonBackground}>
+                <IconButton
+                  icon="close"
+                  size={24}
+                  style={styles.closeButton}
+                />
+              </TouchableOpacity>
+            </View>
+
+              <TextInput
+                mode="flat"
+                placeholder="Search"
+                placeholderTextColor={COLORS.gray}
+                placeholderStyle={{ fontFamily: 'SFPRODISPLAYBOLD' }}
+                style={styles.searchInput}
+                left={<TextInput.Icon icon="magnify" color={COLORS.gray} />}
+                underlineStyle={{ backgroundColor: 'transparent' }}
+                value={searchText}
+                onChangeText={setSearchText}
+              />
+
+              <FlatList
+                data={filteredCodes}
+                keyExtractor={item => item.code}
+                renderItem={({ item }) => {
+                  const isSelected = selectedCountry?.code === item.code;
+                  return (
+                    <TouchableOpacity
+                      style={[
+                        styles.optionRowNew,
+                        isSelected && styles.selectedRow,
+                      ]}
+                      onPress={() => handleCountryChange(item)}>
+                      <Image
+                        source={{
+                          uri: `https://flagcdn.com/w40/${item.code.toLowerCase()}.png`,
+                        }}
+                        style={styles.flagIcon}
+                      />
+                      <Text style={styles.codeText}>
+                        {item.phoneCode}
+                      </Text>
+                      <Text style={styles.optionTextNew}>
+                        {item.name}
+                      </Text>
+                      {isSelected && (
+                        <Text style={styles.checkIcon}>✔</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
           </View>
-        </View>
       </Modal>
+
     </View>
   );
 };
@@ -147,11 +183,10 @@ const styles = StyleSheet.create({
   countryCodeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal:10,
-    borderRadius:15,
-    borderWidth:1,
-    borderColor:COLORS.backGroundGray,
+    padding: 10,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: COLORS.backGroundGray,
   },
   disabled: {
     opacity: 0.5,
@@ -159,14 +194,14 @@ const styles = StyleSheet.create({
   flagIcon: {
     width: 24,
     height: 24,
-    borderRadius:20,
-    alignItems:'center', 
-    justifyContent:'center',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal:10
   },
   phoneInput: {
     flex: 1,
-    height: Dimensions.get('window').height * 0.06,
-    marginHorizontal:10
+    marginHorizontal: 10
   },
   modalContainer: {
     flex: 1,
@@ -200,9 +235,85 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'SFPRODISPLAYBOLD',
     color: 'red',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  sheetContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+    paddingTop: 20,
+    paddingHorizontal:20,
+    paddingBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontFamily: 'SFPRODISPLAYBOLD',
+  },
+  closeButtonBackground: {
+    borderRadius: 20,
+    backgroundColor: '#F8F8F8'
+  },
+  closeButton: {
+    margin: 0,
+    opacity: 0.7,
+    height: 30, width: 30,
+  },
+  searchInput: {
+    backgroundColor: '#F8F8F8',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginBottom: 10,
+    borderBottomRightRadius:20,
+    borderBottomLeftRadius:20,
+  },
+  optionRowNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  optionTextNew: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily:'SFPRODISPLAYBOLD', marginHorizontal:20
+  },
+  codeText: {
+    fontSize: 18,
+    color:COLORS.gray,
+    fontFamily:'SFPRODISPLAYBOLD'
+  },
+  checkIcon: {
+    fontSize: 12,
+    color: COLORS.Black,
+    marginRight:10,
+    backgroundColor: COLORS.Black,
+    borderRadius:20,height:25,width:25,
+    textAlign:'center',
+    textAlignVertical:'center',
+    color:'white'
+  },
+  selectedRow: {
+    backgroundColor: '#f4f4f4',
+    borderRadius:20,
+  },
+
 });
 
 export default PhoneInput;

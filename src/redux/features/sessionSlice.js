@@ -179,7 +179,7 @@ const sessionSlice = createSlice({
                 );
             }
             state.authInfo = action.payload;
-            state.isEntitled = state.authInfo.profile.entitlements?.length > 0;
+            state.isEntitled = state.authInfo?.profile?.entitlements?.length > 0;
             state.firebaseConfig = action.payload.firebaseConfig;
             state.sessionKey = action.payload.sessionKey;
             handleUserLogin(state.authInfo.profile);

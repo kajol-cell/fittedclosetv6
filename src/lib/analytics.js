@@ -124,7 +124,7 @@ export const initializeAnalytics = async () => {
     );
     return true;
   } catch (error) {
-    console.error('Analytics: Failed to initialize Analytics', error.message);
+    console.error('Analytics: Failed to initialize Analytics', error?.message || error);
     // Continue app execution even if analytics fails
     return false;
   }
@@ -140,7 +140,7 @@ export const trackEvent = (eventName, params) => {
     mixpanel.track(eventName, params);
     console.log(`Analytics: Event tracked - ${eventName}`, params);
   } catch (error) {
-    console.error(`Analytics: Failed to track event - ${eventName}`, error.message);
+    console.error(`Analytics: Failed to track event - ${eventName}`, error?.message || error);
   }
 };
 
@@ -156,7 +156,7 @@ export const identifyUser = async userId => {
       console.log(`Analytics: User identified - ${userId}`);
     }
   } catch (error) {
-    console.error(`Analytics: Failed to identify user - ${userId}`, error.message);
+    console.error(`Analytics: Failed to identify user - ${userId}`, error?.message || error);
   }
 };
 
@@ -180,7 +180,7 @@ export const setUserProperties = properties => {
 
     console.log('Analytics: User properties set', validProperties);
   } catch (error) {
-    console.error('Analytics: Failed to set user properties', error.message);
+    console.error('Analytics: Failed to set user properties', error?.message || error);
   }
 };
 
@@ -194,7 +194,7 @@ export const resetAnalyticsData = () => {
     mixpanel.reset();
     console.log('Analytics: Analytics data reset');
   } catch (error) {
-    console.error('Analytics: Failed to reset analytics data', error.message);
+    console.error('Analytics: Failed to reset analytics data', error?.message || error);
   }
 };
 
@@ -320,7 +320,7 @@ export const identifyUserFromProfile = async (profile, authMethod, isNewUser = f
       has_verified_phone: profile.phoneVerified,
     });
   } catch (error) {
-    console.error('Analytics: Error identifying user from profile', error.message);
+    console.error('Analytics: Error identifying user from profile', error?.message || error);
   }
 };
 

@@ -27,3 +27,18 @@ export const clearImageCache = async () => {
     console.error('❌ Failed to clear image cache:', err);
   }
 };
+
+export const extractErrorMessage = (error, defaultMessage = 'An error occurred') => {
+  if (!error) return defaultMessage;
+  
+  // Handle different error formats
+  if (typeof error === 'string') return error;
+  
+  if (error.message) return error.message;
+  
+  if (error.payload && error.payload.message) return error.payload.message;
+  
+  if (error.responseDescription) return error.responseDescription;
+  
+  return defaultMessage;
+};

@@ -16,12 +16,12 @@ const authenticate = async ({dispatcher, onAuthenticate}) => {
     sessionAuthenticate,
     {},
     async response => {
-      console.log('API session authenticated:', response.profile.entitlements);
+      console.log('API session authenticated:', response?.profile?.entitlements);
       onAuthenticate(true);
     },
     async error => {
       console.error('Error initializing API session:', error);
-      Alert.alert('Verification expired, please verify again', error);
+      Alert.alert('Verification expired, please verify again', error?.message || error);
       await AsyncStorage.removeItem('verificationToken');
       dispatcher(setVerificationToken(null));
       onAuthenticate(false);
