@@ -97,12 +97,10 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         backgroundColor: '#FFFFFF',
-        paddingTop: 20,
-        paddingBottom: 40,
         position: 'absolute',
-        bottom: 20,
         width: '90%',
-        height: '28%',
+        bottom:Dimensions.get('window').height * 0.05,
+        height: Dimensions.get('window').height * 0.2,
         padding: 15,
         alignSelf: 'center',
         shadowColor: '#000',
@@ -110,7 +108,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 10,
-        borderRadius: 25
+        borderRadius: 25,
     },
     header: {
         flexDirection: 'row',

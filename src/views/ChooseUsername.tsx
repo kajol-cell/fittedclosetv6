@@ -93,7 +93,7 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
                         <TextInput
                             style={styles.emailInput}
                             placeholder="@ Username"
-                            placeholderTextColor={COLORS.gray}
+                            placeholderTextColor={COLORS.grayInactive}
                             value={username}
                             onChangeText={handleUsernameChange}
                             autoCapitalize="none"

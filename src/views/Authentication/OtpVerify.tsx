@@ -120,6 +120,9 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                },
                error => {
                   console.error('Code verification failed:', error);
+                  setCode(['', '', '', '', '', '']); 
+                  setIsValid(false);
+                  verificationAttemptedRef.current = false; 
                   setError(error);
                },
             );
@@ -224,15 +227,10 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                             email={contactInfo}
                             code={code}
                             setCode={setCode}
+                            error={error}
                         />
                     }
                 />
-
-                {error ? (
-                    <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>{error}</Text>
-                    </View>
-                ) : null}
 
                 <View style={styles.buttonWrapper}>
                     <TouchableOpacity

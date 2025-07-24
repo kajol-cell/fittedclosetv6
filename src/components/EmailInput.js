@@ -34,7 +34,7 @@ const EmailInput = ({onSubmit, emailValue = ''}) => {
     <View style={styles.container}>
       <TextInput
         placeholder="name@company.com"
-        placeholderTextColor={COLORS.gray}
+        placeholderTextColor={COLORS.grayInactive}
         value={email}
         onChangeText={text => {
           setEmail(text);

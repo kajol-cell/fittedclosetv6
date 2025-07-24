@@ -92,9 +92,9 @@ const PhoneInput = ({
         <TextInput
           style={styles.phoneInput}
           placeholder='765 4321'
-          placeholderTextColor={COLORS.gray}
+          placeholderTextColor={COLORS.grayInactive}
           mode='outlined'
-          activeOutlineColor={COLORS.backGroundGray}
+          activeOutlineColor={COLORS.grayBackground}
           value={phone}
           onChangeText={handlePhoneChange}
           outlineStyle={{ borderRadius: 15 }}
@@ -126,10 +126,10 @@ const PhoneInput = ({
               <TextInput
                 mode="flat"
                 placeholder="Search"
-                placeholderTextColor={COLORS.gray}
+                placeholderTextColor={COLORS.grayInactive}
                 placeholderStyle={{ fontFamily: 'SFPRODISPLAYBOLD' }}
                 style={styles.searchInput}
-                left={<TextInput.Icon icon="magnify" color={COLORS.gray} />}
+                left={<TextInput.Icon icon="magnify" color={COLORS.grayInactive} />}
                 underlineStyle={{ backgroundColor: 'transparent' }}
                 value={searchText}
                 onChangeText={setSearchText}
@@ -185,8 +185,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     borderRadius: 15,
-    borderWidth: 1,
-    borderColor: COLORS.backGroundGray,
+    borderWidth: 2,
+    borderColor: COLORS.grayBackground,
   },
   disabled: {
     opacity: 0.5,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontSize: 18,
-    color:COLORS.gray,
+    color:COLORS.grayInactive,
     fontFamily:'SFPRODISPLAYBOLD'
   },
   checkIcon: {

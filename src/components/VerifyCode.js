@@ -10,10 +10,11 @@ import {
   Platform,
 } from 'react-native';
 import COLORS from '../const/colors';
+import { HelperText } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
-const VerifyCode = ({ onResendCode, status, email, code, setCode }) => {
+const VerifyCode = ({ onResendCode, status, email, code, setCode, error }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRefs = useRef([]);
 
@@ -75,6 +76,8 @@ const VerifyCode = ({ onResendCode, status, email, code, setCode }) => {
           </View>
         ))}
       </View>
+      {error ? <HelperText type="error">{error}</HelperText> : null}
+
 
       <TouchableOpacity
         style={styles.resendButton}
@@ -95,14 +98,14 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    marginBottom: 10,
     paddingHorizontal: 10,
   },
   inputBox: {
     width: 45,
     height: 47,
     borderWidth: 1,
-    borderColor: COLORS.LockGrey,
+    borderColor: COLORS.grayInactive,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
   },
   filledInputBox: {
     borderWidth: 1,
-    borderColor: COLORS.LockGrey,
+    borderColor: COLORS.grayBackground,
   },
   input: {
     fontSize: 18,

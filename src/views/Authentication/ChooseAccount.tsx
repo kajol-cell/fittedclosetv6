@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding:5,
     borderWidth: 1,
-    borderColor: COLORS.backGroundGray,
+    borderColor: COLORS.grayBackground,
     overflow: 'hidden',
   },
   optionCard: {
@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.gray,
+    fontFamily:'SFPRODISPLAYBOLD',
+    color: COLORS.grayInactive,
     marginBottom: 4,
   },
   selectedText: {

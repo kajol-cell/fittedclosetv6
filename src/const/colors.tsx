@@ -66,6 +66,7 @@ const COLORS = {
   // Gradients (placeholders)
   linearBlue: 'linear-gradient(90deg, #3B82F7, #007AFF)',
   radialHighlight: 'radial-gradient(circle, #EA4335, #FF0000)',
+  Black:'#000000',
 };
 
 export default COLORS;

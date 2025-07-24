@@ -232,7 +232,7 @@ const AuthView: React.FC = () => {
                     </Text>
                     <Text style={[ThemeStyle.body2, ThemeStyle.textBold, { color: COLORS.secondaryDarker }]}>
                         Terms of Service  <Text style={[ThemeStyle.body2, ThemeStyle.text]}>and
-                        </Text> Privacy Policy
+                        </Text>{' '}Privacy Policy
                     </Text>
                 </View>
                 <BottomOptionsModal
@@ -280,14 +280,6 @@ const AuthView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    // container: {
-    //     flex: 1,
-    //     backgroundColor: '#FFFFFF',
-    // },
-    // mainContainer: {
-    //     flex: 1,
-    //     paddingHorizontal: 20,
-    // },
     contentContainer: {
         bottom: 2,
         justifyContent: 'center',
@@ -295,13 +287,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     slidewrap: {
-        // width: width - 45,
         justifyContent: 'center',
         alignSelf: 'center',
         bottom: Dimensions.get('window').height * 0.01
     },
     slideImage: {
-        // width: width - 45,
         height: height * 0.5,
         aspectRatio: 1 / 1.1,
         alignSelf: 'center',
