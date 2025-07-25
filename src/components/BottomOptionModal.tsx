@@ -52,7 +52,7 @@ const BottomOptionsModal: React.FC<BottomOptionsModalProps> = ({
                         <TouchableOpacity
                             style={styles.optionButton}
                             onPress={() => {
-                                navigate('Email')
+                                navigate('Walkthrough')
                                 onClose()
                             }}
                         >

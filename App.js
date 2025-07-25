@@ -39,6 +39,9 @@ import ChooseAccount from './src/views/Authentication/ChooseAccount';
 import MediaPermission from './src/views/Permissions/MediaPermission';
 import ChooseUsername from './src/views/ChooseUsername';
 import Profile from './src/views/MyProfile/Profile';
+import WalkthroughView from './src/views/WalkthroughView';
+import CameraPermissionScreen from './src/components/CameraPermissionScreen';
+import CameraScreen from './src/components/CameraScreen';
 
 // Define a custom theme with a blue primary color
 const theme = {
@@ -67,7 +70,7 @@ const App = () => {
     console.log('onAuthenticate:', success);
     try {
       if (success) {
-        setInitialRoute(ScreenType.MAIN);
+        setInitialRoute(ScreenType.WALKTHROUGH);
       }
       else {
         setInitialRoute(ScreenType.ENTRY);
@@ -205,7 +208,10 @@ const App = () => {
                     headerShown: false, 
                   }}>
                   <Stack.Screen name={ScreenType.ENTRY} component={AuthView}/>
+                  <Stack.Screen name={ScreenType.WALKTHROUGH} component={WalkthroughView}/>
                   <Stack.Screen name={ScreenType.MAIN} component={MainView}/>
+                  <Stack.Screen name="CameraPermission" component={CameraPermissionScreen}/>
+                  <Stack.Screen name="Camera" component={CameraScreen}/>
                   <Stack.Screen
                     name={ScreenType.EMAIL}
                     component={EmailScreen}

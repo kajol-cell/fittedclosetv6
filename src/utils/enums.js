@@ -25,6 +25,7 @@ export const ProfileEditType = Object.freeze({
 export const ScreenType = Object.freeze({
   ENTRY: 'Entry',
   MAIN: 'Main',
+  WALKTHROUGH: 'Walkthrough',
   CLOSET: 'Closet',
   FITS: 'Fits',
   PIECES: 'Pieces',

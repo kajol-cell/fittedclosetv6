@@ -4,21 +4,6 @@ import { Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const ThemeStyle = StyleSheet.create({
-  // container: {
-  //       flex: 1,
-  //       backgroundColor: '#FFFFFF',
-  //   },
-  //   mainContainer: {
-  //       flex: 1,
-  //       paddingHorizontal: 20,
-  //   },
-  //   contentContainer: {
-  //       bottom: 2,
-  //       justifyContent: 'center',
-  //       alignItems: 'center',
-  //       marginBottom: 16,
-  //   },
-
   container: {
     backgroundColor: COLORS.white,
     flex: 1,

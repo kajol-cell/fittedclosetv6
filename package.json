@@ -59,6 +59,7 @@
     "react-native-toast-message": "^2.2.1",
     "react-native-tracking-transparency": "^0.1.2",
     "react-native-vector-icons": "^10.2.0",
+    "react-native-vision-camera": "^4.7.1",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "reselect": "^5.1.1"
