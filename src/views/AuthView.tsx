@@ -111,53 +111,70 @@ const AuthView: React.FC = () => {
     const handleLoginWithApple = async (userInfo: UserInfo) => {
         console.log(userInfo);
         setLoading(true);
-
-        dispatchMessageTypeThunk(
-            thirdPartyAuthenticate,
-            {
-                clientType: getClientType(),
-                thirdPartyJwt: userInfo.identityToken,
-                thirdPartyLoginType: 'APPLE',
-            },
-            (arg: any) => {
-                handleTracking(arg, 'APPLE');
-                navigate(ScreenType.MAIN);
-            },
-            (error: any) => {
-                navigate(ScreenType.ENTRY);
-                Alert.alert('Login failed', error.message);
-            },
-        ).finally(() => setLoading(false));
+        try {
+            await dispatchMessageTypeThunk(
+                thirdPartyAuthenticate,
+                {
+                    clientType: getClientType(),
+                    thirdPartyJwt: userInfo.identityToken,
+                    thirdPartyLoginType: 'APPLE',
+                },
+                (arg: any) => {
+                    handleTracking(arg, 'APPLE');
+                    navigate(ScreenType.MAIN);
+                },
+                (error: any) => {
+                    navigate(ScreenType.ENTRY);
+                    Alert.alert('Login failed', error.message);
+                },
+            );
+        } catch (error) {
+            console.error('Apple login error:', error);
+            Alert.alert('Login failed', 'An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleLoginWithGoogle = async (userInfo: UserInfo) => {
         setLoading(true);
-        dispatchMessageTypeThunk(
-            thirdPartyAuthenticate,
-            {
-                clientType: getClientType(),
-                thirdPartyJwt: userInfo.idToken,
-                thirdPartyLoginType: 'GOOGLE',
-            },
-            (arg: any) => {
-                handleTracking(arg, 'GOOGLE');
-                navigate(ScreenType.MAIN);
-            },
-            (error: any) => {
-                navigate(ScreenType.ENTRY);
-                Alert.alert('Login failed', error.message);
-            },
-        ).finally(() => setLoading(false));
+        try {
+            await dispatchMessageTypeThunk(
+                thirdPartyAuthenticate,
+                {
+                    clientType: getClientType(),
+                    thirdPartyJwt: userInfo.idToken,
+                    thirdPartyLoginType: 'GOOGLE',
+                },
+                (arg: any) => {
+                    handleTracking(arg, 'GOOGLE');
+                    navigate(ScreenType.MAIN);
+                },
+                (error: any) => {
+                    navigate(ScreenType.ENTRY);
+                    Alert.alert('Login failed', error.message);
+                },
+            );
+        } catch (error) {
+            console.error('Google login error:', error);
+            Alert.alert('Login failed', 'An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
     };
 
 
     const googleCancel = () => {
-        console.log("Cancelled");
+        console.log("Google Sign-In Cancelled");
+        // Ensure loading state is reset when user cancels
+        setLoading(false);
     };
 
 
     const googleError = (error: any) => {
-        console.log('Google Sign In : ', error);
+        console.log('Google Sign In Error: ', error);
+        // Ensure loading state is reset when there's an error
+        setLoading(false);
     };
 
     const handleScroll = (event: any) => {

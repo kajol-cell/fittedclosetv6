@@ -8,14 +8,17 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../const/colors';
 import { navigate } from '../../navigation/navigationService';
-import { ApiMessageType, ScreenType } from '../../utils/enums';
+import { ApiMessageType,  ScreenType } from '../../utils/enums';
 import { dispatchThunk } from '../../utils/reduxUtils';
 import { sendCode, verifyCode } from '../../redux/features/authSlice';
 import { setAuthInfo, setVerificationToken } from '../../redux/features/sessionSlice';
-import { identifyUserFromProfile, trackLogin, trackSignup } from '../../lib/analytics';
+import { hideLoading } from '../../redux/features/loadingSlice';
+import { authenticate } from '../../utils/apiUtils';
+import { API_CONFIG } from '../../config/appConfig';
 import LoadingWrapper from '../../components/LoadingWrapper';
 import VerifyCode from '../../components/VerifyCode';
 import CommonHeader from '../../components/CommonHeader';
@@ -25,34 +28,14 @@ interface OtpVerifyProps {
     route: any;
 }
 
-interface AuthInfo {
-    profile: {
-        id: string;
-        email: string;
-        phoneCountryCode: string;
-        phoneNumber: string;
-    };
-    newUser: boolean;
-}
-
-const handleTracking = (authInfo: AuthInfo, authMethod: string) => {
-    console.log('handleTracking', authInfo);
-    identifyUserFromProfile(authInfo.profile, authMethod, authInfo.newUser);
-    if (authInfo.newUser) {
-        trackSignup(authMethod);
-    } else {
-        trackLogin(authMethod);
-    }
-};
-
 const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const dispatch = useDispatch();
+    const apiSessionKey = useSelector((state: any) => state.auth.apiSessionKey);
     const { phoneNumber, countryCode, email } = route.params || {};
-    console.log(route.params, 'route.params>>>>>>>>')
-
     const isPhoneVerification = !!phoneNumber;
     const isEmailVerification = !!email;
-    const [contactInfo, setContactInfo] = useState(isPhoneVerification ? phoneNumber : email || '');
+    const [contactInfo, setContactInfo] = useState(isPhoneVerification ? phoneNumber : isEmailVerification ? email : '');
+    const [authMethod, setAuthMethod] = useState(isPhoneVerification ? 'phoneNumber' : isEmailVerification ? 'email' : '');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [isCodeSent, setIsCodeSent] = useState(false);
@@ -61,11 +44,28 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [isVerifying, setIsVerifying] = useState(false);
     const verificationAttemptedRef = useRef(false);
+    const isUserTypingRef = useRef(false);
+    const didShowLoaderRef = useRef(false);
 
+
+    const handleSetCode = (newCode: any) => {
+        if (error && !isUserTypingRef.current) {
+            setError('');
+        }
+        isUserTypingRef.current = true;
+        setCode(newCode);
+    };
+
+    const resetVerificationState = () => {
+        isUserTypingRef.current = false;
+        setCode(['', '', '', '', '', '']);
+        setIsValid(false);
+        verificationAttemptedRef.current = false;
+    };
 
     useEffect(() => {
         const allFilled = code.every(item => item !== '');
-    
+
         if (allFilled && !isVerifying && !loading && !verificationAttemptedRef.current) {
             setIsValid(true);
             verificationAttemptedRef.current = true;
@@ -74,75 +74,146 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         } else if (!allFilled) {
             setIsValid(false);
             verificationAttemptedRef.current = false;
-    
-            if (error) {
+            if (error && isUserTypingRef.current) {
                 setError('');
             }
         }
-    }, [code]);
-    
+    }, [code, error]);
 
-  
+    useEffect(() => {
+        return () => {
+            setLoading(false);
+            setIsVerifying(false);
+            if (didShowLoaderRef.current) {
+                dispatch(hideLoading());
+                didShowLoaderRef.current = false;
+            }
+        };
+    }, [dispatch]);
+
+
     const handleVerifyCode = async () => {
-        console.log('Verifying code:', code);
-        console.log('Route params:', route.params);
-        setLoading(true);
         setError('');
-        
+
         try {
-            const messageType = route.params.email 
+            const messageType = route.params.email
                 ? ApiMessageType.VERIFY_EMAIL_CODE
                 : ApiMessageType.VERIFY_PHONE_CODE;
-            
-            console.log('Using message type:', messageType);
-            console.log('Code to verify:', code.join(''));
-            
-            const result = await dispatchThunk(
-               verifyCode,
-               messageType,
-               {code: code.join('')},
-               arg => {
-                console.log('Verification response>>>:', arg);
-                  if (arg && arg.verificationToken) {
-                      dispatch(setVerificationToken(arg.verificationToken));
-                      let authInfo = arg.authInfo;
-                      if (authInfo) {
-                          dispatch(setAuthInfo(authInfo));
-                          handleTracking(authInfo, route.params.email ? 'email' : 'phone');
-                      } else {
-                          console.error('Missing authInfo in response:', arg);
-                          setError('Invalid verification response - missing auth info');
-                      }
-                  } else {
-                      console.error('Invalid verification response:', arg);
-                      setError('Invalid verification response - missing verification token');
-                  }
-               },
-               error => {
-                  console.error('Code verification failed:', error);
-                  setCode(['', '', '', '', '', '']); 
-                  setIsValid(false);
-                  verificationAttemptedRef.current = false; 
-                  setError(error);
-               },
+
+            await dispatchThunk(
+                verifyCode,
+                messageType,
+                { code: code.join('') },
+                async (arg) => {
+                    if (arg && arg.verificationToken && arg.isValid) {
+                        dispatch(setVerificationToken(arg.verificationToken));
+                        authenticate();
+                        verifyAndAuthenticate();
+                    } else {
+                        setError('You have entered wrong OTP.');
+                        resetVerificationState();
+                    }
+                },
+                (error) => {
+                    setError(error || 'Verification failed.');
+                    resetVerificationState();
+                }
             );
-            
-            if (result) {
-                console.log('Verification successful:', result);
-            }
         } catch (error) {
-            console.error('Verification error:', error);
             setError('Verification failed. Please try again.');
+            resetVerificationState();
         } finally {
             setLoading(false);
             setIsVerifying(false);
         }
-     };
+    };
+
+    const verifyAndAuthenticate = async () => {
+        try {
+            const storedToken = await AsyncStorage.getItem('verificationToken');
+
+            if (storedToken) {
+                authenticate({
+                    dispatcher: dispatch,
+                    onAuthenticate: (success: any) => {
+                        if (success) {
+                            navigate(ScreenType.MAIN);
+                        } else {
+                            createAccount(storedToken);
+                        }
+                    }
+                });
+            } else {
+                setError('Verification token not found. Please try again.');
+                resetVerificationState();
+            }
+        } catch (error) {
+            setError('Authentication failed. Please try again.');
+            resetVerificationState();
+        }
+    };
+
+    const createAccount = async (verificationToken: string) => {
+        setError('');
+        setLoading(true);
+
+        try {
+            const payload = isPhoneVerification
+                ? {
+                    phoneNumber: contactInfo,
+                    phoneCountryCode: countryCode,
+                }
+                : {
+                    email: contactInfo,
+                };
+
+            const requestBody = {
+                messageType: ApiMessageType.CREATE_ACCOUNT,
+                sessionKey: apiSessionKey,
+                verificationToken: verificationToken,
+                payload: payload,
+            };
+
+            const response = await fetch(`${API_CONFIG.SERVER_URL}/api/api/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'VC-Device-Platform': Platform.OS,
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            const responseText = await response.text();
+
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+            } catch (parseError) {
+                throw new Error(`Server returned invalid JSON: ${responseText}`);
+            }
+
+            if (responseData.responseCode === 200) {
+                if (responseData.payload && responseData.payload.authInfo) {
+                    dispatch(setAuthInfo(responseData.payload.authInfo));
+                    setLoading(false);
+                    dispatch(hideLoading());
+                    navigate(ScreenType.MAIN);
+                } else {
+                    setError('Account creation failed. Please try again.');
+                    setLoading(false);
+                }
+            } else {
+                setError(responseData.responseDescription || 'Account creation failed. Please try again.');
+                setLoading(false);
+            }
+        } catch (error) {
+            setError('Account creation failed. Please try again.');
+            setLoading(false);
+        }
+    };
 
     const resendCode = async () => {
-        setLoading(true);
         setError('');
-
         try {
             const messageType = isPhoneVerification
                 ? ApiMessageType.SEND_PHONE_CODE
@@ -157,21 +228,15 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                 messageType,
                 payload,
                 (response) => {
-                    console.log('Code resent successfully:', response);
                     setIsCodeSent(true);
                     setError('');
                 },
                 (error: any) => {
-                    console.error('Code verification failed:', error);
                     setError(error.message || 'Invalid code, please try again.');
-                    setCode(['', '', '', '', '', '']); 
-                    setIsValid(false);
-                    verificationAttemptedRef.current = false; 
+                    resetVerificationState();
                 },
-                
             );
         } catch (err) {
-            console.error('Error resending code:', err);
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -226,7 +291,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                             status={status}
                             email={contactInfo}
                             code={code}
-                            setCode={setCode}
+                            setCode={handleSetCode}
                             error={error}
                         />
                     }

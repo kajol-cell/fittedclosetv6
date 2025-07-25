@@ -9,43 +9,18 @@ import {
     Platform,
     Alert,
     TextInput,
-    Dimensions,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import COLORS from '../../const/colors';
 import { navigate } from '../../navigation/navigationService';
-import { ApiMessageType, ScreenType } from '../../utils/enums';
+import { ApiMessageType } from '../../utils/enums';
 import { dispatchThunk } from '../../utils/reduxUtils';
-import { sendCode, verifyCode } from '../../redux/features/authSlice';
-import { setAuthInfo, setVerificationToken } from '../../redux/features/sessionSlice';
-import { identifyUserFromProfile, trackLogin, trackSignup } from '../../lib/analytics';
-import LoadingWrapper from '../../components/LoadingWrapper';
-import VerifyCode from '../../components/VerifyCode';
+import { sendCode} from '../../redux/features/authSlice';
 import CommonHeader from '../../components/CommonHeader';
 
 interface EmailScreenProps {
     navigation: any;
 }
-
-interface AuthInfo {
-    profile: {
-        id: string;
-        email: string;
-        phoneCountryCode: string;
-        phoneNumber: string;
-    };
-    newUser: boolean;
-}
-
-const handleTracking = (authInfo: AuthInfo, authMethod: string) => {
-    console.log('handleTracking', authInfo);
-    identifyUserFromProfile(authInfo.profile, authMethod, authInfo.newUser);
-    if (authInfo.newUser) {
-        trackSignup(authMethod);
-    } else {
-        trackLogin(authMethod);
-    }
-};
 
 const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
     const dispatch = useDispatch();

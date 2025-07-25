@@ -38,7 +38,12 @@ export const callApi = async (messageType, payload) => {
 
     try {
         storeInstance.dispatch(showLoading());
-        const body = JSON.stringify({messageType, sessionKey, payload});
+        let body;
+        if (messageType === AUTHENTICATE) {
+            body = JSON.stringify({messageType, payload});
+        } else {
+            body = JSON.stringify({messageType, sessionKey, payload});
+        }
         console.log('callApi', body, url);
         const response = await fetch(url, {
             method: 'POST',
@@ -58,9 +63,8 @@ export const callApi = async (messageType, payload) => {
 };
 
 export const callSession = async (messageType, payload) => {
-    const url = `${API_URL}/session/send`;
-    console.log('Request URL:', url);
-    const state = storeInstance.getState(); // Use global getState
+    const url = `${API_URL}/api/session/send`;
+    const state = storeInstance.getState(); 
     const sessionKey = state.session.sessionKey;
     assertHasSessionKey(messageType, sessionKey);
     try {
@@ -68,6 +72,7 @@ export const callSession = async (messageType, payload) => {
         const isAuthenticate = messageType === AUTHENTICATE;
         let body;
         const verificationToken = await AsyncStorage.getItem('verificationToken');
+        console.log('callSession - verificationToken from AsyncStorage:', verificationToken);
         if (isAuthenticate) {
             body = JSON.stringify({messageType, verificationToken, payload});
         } else {

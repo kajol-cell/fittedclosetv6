@@ -45,7 +45,7 @@ const ClosetView = () => {
                 setLoading(false);
             }
         }
-    }, [loading, isAuthenticated, dispatch, closet]);
+    }, [isAuthenticated, dispatch, closet]);
 
     return (
         <View style={{flex: 1}}>

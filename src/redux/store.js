@@ -1,4 +1,3 @@
-// store.js with Configuration for authSlice and sessionSlice
 
 import {configureStore} from '@reduxjs/toolkit';
 import authReducer from './features/authSlice';
@@ -8,11 +7,10 @@ import {persistStore, persistReducer} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import rootReducer from "./rootReducer";
 
-// Persist configuration for authSlice
 const authPersistConfig = {
   key: 'auth',
   storage: AsyncStorage,
-  whitelist: ['verificationToken'], // Only persist verificationToken
+  whitelist: ['verificationToken', 'apiSessionKey', 'sessionExpiresAt'], // Persist session key and expiration
 };
 
 const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
@@ -20,14 +18,14 @@ const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
 const store = configureStore({
   reducer: {
     root:rootReducer,
-    auth: persistedAuthReducer, // Auth slice with persistence
-    session: sessionReducer, // Session slice without persistence
+    auth: persistedAuthReducer,
+    session: sessionReducer,
     loading: loadingReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
-      serializableCheck: false, // <-- Disable serializable state check
-      immutableCheck: false, // <-- Disable immutable state check (optional)
+      serializableCheck: false,
+      immutableCheck: false,
     }),
 });
 

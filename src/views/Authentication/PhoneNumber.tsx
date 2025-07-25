@@ -11,12 +11,10 @@ import {
 import { useDispatch } from 'react-redux';
 import COLORS from '../../const/colors';
 import { navigate } from '../../navigation/navigationService';
-import { ApiMessageType, ScreenType } from '../../utils/enums';
+import { ApiMessageType} from '../../utils/enums';
 import { dispatchThunk } from '../../utils/reduxUtils';
-import { sendCode, verifyCode } from '../../redux/features/authSlice';
-import { identifyUserFromProfile, trackLogin, trackSignup } from '../../lib/analytics';
+import { sendCode } from '../../redux/features/authSlice';
 import LoadingWrapper from '../../components/LoadingWrapper';
-import VerifyCode from '../../components/VerifyCode';
 import CommonHeader from '../../components/CommonHeader';
 import PhoneInput from '../../components/PhoneInput';
 import { createFullPhoneNumber, getPhoneValidationError } from '../../utils/phoneUtils';
@@ -24,26 +22,6 @@ import { createFullPhoneNumber, getPhoneValidationError } from '../../utils/phon
 interface EmailScreenProps {
     navigation: any;
 }
-
-interface AuthInfo {
-    profile: {
-        id: string;
-        email: string;
-        phoneCountryCode: string;
-        phoneNumber: string;
-    };
-    newUser: boolean;
-}
-
-const handleTracking = (authInfo: AuthInfo, authMethod: string) => {
-    console.log('handleTracking', authInfo);
-    identifyUserFromProfile(authInfo.profile, authMethod, authInfo.newUser);
-    if (authInfo.newUser) {
-        trackSignup(authMethod);
-    } else {
-        trackLogin(authMethod);
-    }
-};
 
 const PhoneNumberScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
     const dispatch = useDispatch();

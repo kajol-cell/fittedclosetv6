@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Platform,
@@ -25,6 +25,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onError,
   onCancel,
 }) => {
+  const [isSigningIn, setIsSigningIn] = useState(false);
   useEffect(() => {
     const options = Platform.select({
       ios: {
@@ -38,20 +39,47 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       },
     });
 
-    GoogleSignin.configure(options!); // assert non-null since Platform.select ensures one is returned
+    GoogleSignin.configure(options!); 
+
+    return () => {
+      GoogleSignin.signOut().catch(error => {
+        console.log('Error signing out during cleanup:', error);
+      });
+    };
   }, []);
 
   const handleSignIn = async () => {
+    if (isSigningIn) {
+      console.log('Google Sign-In already in progress');
+      return;
+    }
+
+    setIsSigningIn(true);
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      onSuccess?.(userInfo?.data);
-    } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        onCancel?.();
+      if (userInfo?.data) {
+        onSuccess?.(userInfo.data);
       } else {
+        onError?.({ message: 'No user data received from Google Sign-In' });
+      }
+    } catch (error: any) {
+      console.log('Google Sign-In error:', error);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log('Google Sign-In cancelled by user');
+        onCancel?.();
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log('Google Sign-In already in progress');
+        onError?.({ message: 'Sign-in already in progress' });
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log('Play Services not available');
+        onError?.({ message: 'Google Play Services not available' });
+      } else {
+        console.log('Google Sign-In error:', error);
         onError?.(error);
       }
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -59,10 +87,11 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     <View style={styles.BtnContainer}>
       <Button
         imgSrc={require('../assets/images/google.png')}
-        title="Continue with Google"
+        title={isSigningIn ? "Signing in..." : "Continue with Google"}
         buttonType={true}
         bgColor={COLORS.primary}
         onPress={handleSignIn}
+        disabled={isSigningIn}
       />
     </View>
   );

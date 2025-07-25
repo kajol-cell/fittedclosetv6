@@ -11,16 +11,16 @@ const BUFFER_MINUTES = 5; // Buffer time in minutes
 
 export const setAuthStore = s => {
   store = s;
-}; // Setter function to initialize store
+}; 
 
-async function handleApiAuthenticate(getState) {
+async function handleApiAuthenticate(getState, dispatch) {
   const apiSessionKey = getState().auth.apiSessionKey;
   if (!apiSessionKey || getState().auth.sessionExpiresAt < Date.now()) {
     const response = await callApi(ApiMessageType.AUTHENTICATE, {
       apiKey: API_CONFIG.SECRET_KEY,
     });
     const sessionKey = response.payload.sessionKey;
-    getState().auth.apiSessionKey = sessionKey;
+    dispatch(apiAuthenticate.fulfilled(sessionKey, 'auth/apiAuthenticate', {}));
     console.log('Authenticated, session key', sessionKey);
     return sessionKey;
   } else {
@@ -36,9 +36,10 @@ async function makeThunkCall(
   onError,
   getState,
   rejectWithValue,
+  dispatch,
 ) {
   try {
-    const sessionKey = await handleApiAuthenticate(getState);
+    const sessionKey = await handleApiAuthenticate(getState, dispatch);
     if (messageType === ApiMessageType.AUTHENTICATE) {
       onSuccess(sessionKey);
       return sessionKey;
@@ -69,7 +70,7 @@ const createAuthThunk = (type, messageType) =>
     type,
     async (
       {payload = {}, onSuccess = () => {}, onError = () => {}},
-      {getState, rejectWithValue},
+      {getState, rejectWithValue, dispatch},
     ) => {
       return await makeThunkCall(
         messageType,
@@ -78,6 +79,7 @@ const createAuthThunk = (type, messageType) =>
         onError,
         getState,
         rejectWithValue,
+        dispatch,
       );
     },
   );
@@ -87,7 +89,7 @@ const createGenericAuthThunk = type =>
     type,
     async (
       {messageType, payload = {}, onSuccess = () => {}, onError = () => {}},
-      {getState, rejectWithValue},
+      {getState, rejectWithValue, dispatch},
     ) => {
       return await makeThunkCall(
         messageType,
@@ -96,6 +98,7 @@ const createGenericAuthThunk = type =>
         onError,
         getState,
         rejectWithValue,
+        dispatch,
       );
     },
   );
@@ -108,7 +111,7 @@ export const thirdPartyAuthenticate = createAsyncThunk(
   ) => {
     try {
       console.log('thirdparty auth, payload', payload);
-      await handleApiAuthenticate(getState);
+      await handleApiAuthenticate(getState, dispatch);
       const response = await callApi(
         ApiMessageType.THIRD_PARTY_AUTHENTICATE,
         payload,
