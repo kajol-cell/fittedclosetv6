@@ -34,6 +34,12 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const { phoneNumber, countryCode, email } = route.params || {};
     const isPhoneVerification = !!phoneNumber;
     const isEmailVerification = !!email;
+    
+    // Validate route parameters
+    if (!phoneNumber && !email) {
+        console.error('Missing required route parameters: phoneNumber or email');
+    }
+    
     const [contactInfo, setContactInfo] = useState(isPhoneVerification ? phoneNumber : isEmailVerification ? email : '');
     const [authMethod, setAuthMethod] = useState(isPhoneVerification ? 'phoneNumber' : isEmailVerification ? 'email' : '');
     const [error, setError] = useState('');
@@ -43,9 +49,11 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const [isValid, setIsValid] = useState(false);
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [isVerifying, setIsVerifying] = useState(false);
+    const [resetFocus, setResetFocus] = useState(false);
     const verificationAttemptedRef = useRef(false);
     const isUserTypingRef = useRef(false);
     const didShowLoaderRef = useRef(false);
+    const isNavigatingRef = useRef(false);
 
 
     const handleSetCode = (newCode: any) => {
@@ -61,6 +69,14 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         setCode(['', '', '', '', '', '']);
         setIsValid(false);
         verificationAttemptedRef.current = false;
+        
+        // Reset focus to first input field
+        setResetFocus(true);
+        
+        // Reset the focus flag after a short delay
+        setTimeout(() => {
+            setResetFocus(false);
+        }, 150);
     };
 
     useEffect(() => {
@@ -82,8 +98,11 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 
     useEffect(() => {
         return () => {
+            // Cleanup all loading states on unmount
             setLoading(false);
             setIsVerifying(false);
+            setError('');
+            isNavigatingRef.current = false;
             if (didShowLoaderRef.current) {
                 dispatch(hideLoading());
                 didShowLoaderRef.current = false;
@@ -157,6 +176,25 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         setError('');
         setLoading(true);
 
+        // Validate required parameters
+        if (!verificationToken) {
+            setError('Verification token is required');
+            setLoading(false);
+            return;
+        }
+
+        if (!apiSessionKey) {
+            setError('Session key is required');
+            setLoading(false);
+            return;
+        }
+
+        if (!contactInfo) {
+            setError('Contact information is required');
+            setLoading(false);
+            return;
+        }
+
         try {
             const payload = isPhoneVerification
                 ? {
@@ -174,6 +212,9 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                 payload: payload,
             };
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
             const response = await fetch(`${API_CONFIG.SERVER_URL}/api/api/send`, {
                 method: 'POST',
                 headers: {
@@ -181,9 +222,17 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                     'VC-Device-Platform': Platform.OS,
                 },
                 body: JSON.stringify(requestBody),
+                signal: controller.signal,
             });
 
+            clearTimeout(timeoutId);
+
             const responseText = await response.text();
+
+            // Check HTTP status code
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
             let responseData;
             try {
@@ -194,9 +243,21 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 
             if (responseData.responseCode === 200) {
                 if (responseData.payload && responseData.payload.authInfo) {
-                    dispatch(setAuthInfo(responseData.payload.authInfo));
+                    // Prevent multiple navigation attempts
+                    if (isNavigatingRef.current) {
+                        return;
+                    }
+                    isNavigatingRef.current = true;
+                    
+                    // Clear all loading states immediately
                     setLoading(false);
+                    setIsVerifying(false);
                     dispatch(hideLoading());
+                    
+                    // Set auth info
+                    dispatch(setAuthInfo(responseData.payload.authInfo));
+                    
+                    // Navigate immediately
                     navigate(ScreenType.MAIN);
                 } else {
                     setError('Account creation failed. Please try again.');
@@ -207,7 +268,11 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                 setLoading(false);
             }
         } catch (error) {
-            setError('Account creation failed. Please try again.');
+            if (error.name === 'AbortError') {
+                setError('Request timed out. Please try again.');
+            } else {
+                setError('Account creation failed. Please try again.');
+            }
             setLoading(false);
         }
     };
@@ -289,10 +354,10 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                         <VerifyCode
                             onResendCode={resendCode}
                             status={status}
-                            email={contactInfo}
                             code={code}
                             setCode={handleSetCode}
                             error={error}
+                            resetFocus={resetFocus}
                         />
                     }
                 />

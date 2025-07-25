@@ -14,9 +14,17 @@ import { HelperText } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 
-const VerifyCode = ({ onResendCode, status, email, code, setCode, error }) => {
+const VerifyCode = ({ onResendCode, status,  code, setCode, error, resetFocus }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRefs = useRef([]);
+
+  React.useEffect(() => {
+    if (resetFocus && inputRefs.current[0]) {
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 50);
+    }
+  }, [resetFocus]);
 
   const handleTextChange = (text, index) => {
     if (/^\d*$/.test(text)) {

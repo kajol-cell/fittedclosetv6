@@ -60,6 +60,7 @@ const App = () => {
   const dispatch = useDispatch();
   const [initialRoute, setInitialRoute] = useState(ScreenType.ENTRY);
   const [loading, setLoading] = useState(true);
+  const [isInitialAuth, setIsInitialAuth] = useState(true);
   const authInfo = useSelector(selectAuthInfo);
   const firebaseConfig = useSelector(selectFirebaseConfig);
   const onAuthenticate = async success => {
@@ -77,6 +78,8 @@ const App = () => {
     }
     finally {
       setLoading(false);
+      // Mark that initial auth is complete
+      setIsInitialAuth(false);
     }
   };
 
@@ -85,9 +88,30 @@ const App = () => {
       console.log('No authInfo available');
       return;
     }
-    const sessionExpirationMillis =
-      authInfo.sessionExpirationMinutes * 60 * 1000;
-    const delay = sessionExpirationMillis - 60 * 1000; // 1 minutes before expiration
+    
+    // Skip session refresh during initial authentication
+    if (isInitialAuth) {
+      console.log('[AuthRefresh] Skipping refresh during initial auth');
+      return;
+    }
+    
+    // Check if sessionExpirationMinutes exists and is valid
+    if (!authInfo.sessionExpirationMinutes || authInfo.sessionExpirationMinutes <= 0) {
+      console.log('[AuthRefresh] No valid session expiration time, skipping refresh');
+      return;
+    }
+    
+    const sessionExpirationMillis = authInfo.sessionExpirationMinutes * 60 * 1000;
+    const delay = sessionExpirationMillis - 60 * 1000; // 1 minute before expiration
+    
+    // Ensure delay is positive
+    if (delay <= 0) {
+      console.log('[AuthRefresh] Session expires too soon, skipping refresh');
+      return;
+    }
+    
+    console.log(`[AuthRefresh] Setting up session refresh in ${Math.round(delay / 1000 / 60)} minutes`);
+    
     const timeout = setTimeout(() => {
       console.log('[AuthRefresh] Refreshing session before channel timeout...');
       const onAuth = async success => {
@@ -97,7 +121,7 @@ const App = () => {
     }, delay);
 
     return () => clearTimeout(timeout);
-  }, [authInfo, dispatch]);
+  }, [authInfo, dispatch, isInitialAuth]);
 
   useEffect(() => {
     if (firebaseConfig) {
