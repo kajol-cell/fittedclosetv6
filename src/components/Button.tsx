@@ -73,17 +73,17 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <Animated.View
-  style={[
-    styles.btnCustom,
-    {
-      transform: [{ scale: scaleAnim }],
-      backgroundColor,
-      width: (btnwidth ?? '100%') as number | 'auto' | `${number}%`,
-    },
-    !buttonType && !shadowProp && styles.shadowProp,
-    stylesCss,
-    primaryShadow && styles.primaryShadow,
-  ]}
+      style={[
+        styles.btnCustom,
+        {
+          transform: [{ scale: scaleAnim }],
+          backgroundColor,
+          width: (btnwidth ?? '100%') as number | 'auto' | `${number}%`,
+        },
+        !buttonType && !shadowProp && styles.shadowProp,
+        stylesCss,
+        primaryShadow && styles.primaryShadow,
+      ]}
     >
       <TouchableOpacity
         onPressIn={handlePressIn}
@@ -92,7 +92,12 @@ const Button: React.FC<ButtonProps> = ({
         activeOpacity={0.7}
         disabled={disabled}
       >
-        <View style={styles.iconContainer}>
+        <View
+          style={[
+            styles.iconContainerBase,
+            (iconName || imgSrc) ? styles.iconContainerWithIcon : styles.iconContainerCenter,
+          ]}
+        >
           {iconName && (
             <MaterialCommunityIcons
               name={iconName}
@@ -138,18 +143,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 16,
   },
-  iconContainer: {
+  iconContainerBase: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
+    height: 50,
   },
+  iconContainerWithIcon: {
+    justifyContent: 'space-between',
+  },
+  iconContainerCenter: {
+    justifyContent: 'center',
+  },
+
   icon: {
     fontSize: 22,
   },
-  imgStyle:{
-    width:25,
-    height:25,
+  imgStyle: {
+    width: 25,
+    height: 25,
   }
   // title: {
   //   textAlign: 'center',

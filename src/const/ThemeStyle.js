@@ -22,7 +22,7 @@ const ThemeStyle = StyleSheet.create({
   container: {
     backgroundColor: COLORS.white,
     flex: 1,
-    paddingHorizontal: width * 0.05,
+    paddingHorizontal: width * 0.04,
   },  
   mainContainer: {
     backgroundColor: COLORS.white,

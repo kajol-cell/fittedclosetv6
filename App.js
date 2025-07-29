@@ -14,7 +14,6 @@ import {AppStateType, ScreenType} from './src/utils/enums';
 import {authenticate, fetchCountryCodes} from './src/utils/apiUtils';
 import {DefaultTheme, PaperProvider, Portal} from 'react-native-paper';
 import LoadingWrapper from './src/components/LoadingWrapper';
-import logo from './src/assets/images/logo.png';
 import AuthView from './src/views/AuthView';
 import FirebaseManager from './src/firebase/FirebaseManager';
 import Toast from 'react-native-toast-message';

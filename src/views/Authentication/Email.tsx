@@ -15,8 +15,10 @@ import COLORS from '../../const/colors';
 import { navigate } from '../../navigation/navigationService';
 import { ApiMessageType } from '../../utils/enums';
 import { dispatchThunk } from '../../utils/reduxUtils';
-import { sendCode} from '../../redux/features/authSlice';
+import { sendCode } from '../../redux/features/authSlice';
 import CommonHeader from '../../components/CommonHeader';
+import Button from '../../components/Button';
+import ThemeStyle from '../../const/ThemeStyle';
 
 interface EmailScreenProps {
     navigation: any;
@@ -96,9 +98,9 @@ const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.container}
+            style={ThemeStyle.container}
         >
-            <SafeAreaView style={styles.safeArea}>
+            <SafeAreaView style={ThemeStyle.mainContainer}>
                 <CommonHeader
                     title="Enter your email"
                     subtitle="We will send you a confirmation code there"
@@ -107,7 +109,7 @@ const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
                     headerStyle="simple"
                 />
 
-                <View style={styles.content}>
+                <View >
                     <View style={styles.inputContainer}>
                         <TextInput
                             style={styles.emailInput}
@@ -131,29 +133,15 @@ const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
                     </View>
                     {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 </View>
-
                 <View style={styles.buttonWrapper}>
-                    <TouchableOpacity
-                        style={[
-                            styles.button,
-                            {
-                                backgroundColor: isValid ? COLORS.Black : '#F5F5F5',
-                            },
-                        ]}
+                    <Button
+                        title='Continue'
                         onPress={handleContinue}
                         disabled={!isValid}
-                    >
-                        <Text
-                            style={[
-                                styles.buttonText,
-                                {
-                                    color: isValid ? COLORS.white : '#999',
-                                },
-                            ]}
-                        >
-                            Continue
-                        </Text>
-                    </TouchableOpacity>
+                        buttonType={true}
+                        bgColor={isValid?COLORS.primary:COLORS.whiteAlt}
+                        btnTextColor={isValid?COLORS.whiteAlt:COLORS.grayInactive}
+                    />                 
                 </View>
             </SafeAreaView>
         </KeyboardAvoidingView>
@@ -162,16 +150,9 @@ const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
 
 export default EmailScreen;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.white,
-    },
+const styles = StyleSheet.create({   
     safeArea: {
         flex: 1,
-    },
-    content: {
-        paddingHorizontal: 20,
     },
     inputContainer: {
         flexDirection: 'row',
@@ -186,7 +167,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.Black,
         paddingRight: 10,
-        fontFamily: 'SFPRODISPLAYBOLD', paddingHorizontal: 10
+        fontFamily: 'SFPRODISPLAYBOLD',
+         paddingHorizontal: 10
     },
     clearButton: {
         padding: 8,
@@ -199,18 +181,6 @@ const styles = StyleSheet.create({
         color: 'red',
         marginTop: 8,
         fontSize: 14,
-    },
-    button: {
-        marginHorizontal: 20,
-        marginBottom: 20,
-        height: 50,
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonText: {
-        fontSize: 16,
-        fontWeight: '600',
     },
     buttonWrapper: {
         flex: 1,
