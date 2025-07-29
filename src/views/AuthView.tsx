@@ -28,7 +28,7 @@ import { identifyUserFromProfile, trackLogin, trackSignup } from '../lib/analyti
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import COLORS from '../const/colors';
-import BottomOptionsModal from '../components/BottomOptionModal';
+import BottomOptionModal from '../components/BottomOptionModal';
 import ThemeStyle from '../const/ThemeStyle';
 const { TikTokEventsManager } = NativeModules;
 const { width, height } = Dimensions.get('window');
@@ -235,8 +235,10 @@ const AuthView: React.FC = () => {
                     onError={googleError}
                     onCancel={googleCancel}
                 />
-                <TouchableOpacity onPress={() => setShowOptionsModal(true)}
-                    style={styles.termsContainer}
+                <TouchableOpacity onPress={() => {
+                    setShowOptionsModal(true);
+                }}
+                    style={[styles.termsContainer]}
                 >
                     <Text style={[ThemeStyle.H4, ThemeStyle.textBold,
                     { color: COLORS.secondaryDarker }]}>Other options</Text>
@@ -250,18 +252,6 @@ const AuthView: React.FC = () => {
                         </Text>{' '}Privacy Policy
                     </Text>
                 </View>
-                <BottomOptionsModal
-                    visible={showOptionsModal}
-                    onClose={() => setShowOptionsModal(false)}
-                    onSelectEmail={() => {
-                        setAuthMethod('email');
-                        setShowOptionsModal(false);
-                    }}
-                    onSelectPhone={() => {
-                        setAuthMethod('phone');
-                        setShowOptionsModal(false);
-                    }}
-                />
             </View>
         );
     };
@@ -290,6 +280,18 @@ const AuthView: React.FC = () => {
                 }
             />
 
+            {showOptionsModal && <BottomOptionModal
+                visible={true}
+                onClose={() => setShowOptionsModal(false)}
+                onSelectEmail={() => {
+                    setAuthMethod('email');
+                    setShowOptionsModal(false);
+                }}
+                onSelectPhone={() => {
+                    setAuthMethod('phone');
+                    setShowOptionsModal(false);
+                }}
+            />} 
         </SafeAreaView>
     );
 };
@@ -346,7 +348,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         marginHorizontal: 4,
     },
-    
+
 });
 
 export default AuthView;

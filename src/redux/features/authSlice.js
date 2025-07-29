@@ -3,7 +3,7 @@ import {callApi, handleUnexpectedError} from '../api';
 import {setAuthInfo} from './sessionSlice';
 import {API_CONFIG} from '../../config/appConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ApiMessageType} from '../../utils/enums';
+import {ApiMessageType, SessionMessageType} from '../../utils/enums';
 
 let store; // Global reference to the Redux store
 const SESSION_DURATION_MINUTES = 60; // Session duration in minutes
@@ -149,6 +149,7 @@ export const getCountryCodes = createAuthThunk(
 
 export const sendCode = createGenericAuthThunk('auth/sendCode');
 export const verifyCode = createGenericAuthThunk('auth/verifyCode');
+export const createUserHandle = createGenericAuthThunk('auth/createUserHandle');
 
 const authSlice = createSlice({
   name: 'auth',
@@ -205,6 +206,12 @@ const authSlice = createSlice({
         state.status = 'succeeded';
       })
       .addCase(sendCode.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      .addCase(createUserHandle.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+      })
+      .addCase(createUserHandle.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

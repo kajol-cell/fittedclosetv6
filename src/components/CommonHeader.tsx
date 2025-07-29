@@ -91,7 +91,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 const styles = StyleSheet.create({
     simpleContainer: {
         width: '100%',
-        // padding:20,
+        marginHorizontal:15,
         paddingTop: Dimensions.get('window').height * 0.06,
     },
 

@@ -10,22 +10,22 @@ import {
 import { IconButton } from 'react-native-paper';
 import COLORS from '../const/colors';
 import { navigate } from '../navigation/navigationService';
-
 const { width, height } = Dimensions.get('window');
 
-interface BottomOptionsModalProps {
+interface BottomOptionModalProps {
     visible: boolean;
     onClose: () => void;
     onSelectEmail: () => void;
     onSelectPhone: () => void;
 }
 
-const BottomOptionsModal: React.FC<BottomOptionsModalProps> = ({
+const BottomOptionModal: React.FC<BottomOptionModalProps> = ({
     visible,
     onClose,
     onSelectEmail,
     onSelectPhone,
 }) => {
+    console.log('BottomOptionModal rendered with visible:', visible);
     return (
         <Modal
             visible={visible}
@@ -41,7 +41,7 @@ const BottomOptionsModal: React.FC<BottomOptionsModalProps> = ({
                 <TouchableOpacity
                     style={styles.modalContainer}
                     activeOpacity={1}
-                    onPress={() => { }}
+                    onPress={() => {onClose() }}
                 >
                     <View style={styles.handleContainer}>
                         <View style={styles.handle} />
@@ -57,7 +57,7 @@ const BottomOptionsModal: React.FC<BottomOptionsModalProps> = ({
                         <TouchableOpacity
                             style={styles.optionButton}
                             onPress={() => {
-                                navigate('ChooseCategory')
+                                navigate('ChooseUsername')
                                 onClose()
                             }}
                         >
@@ -158,4 +158,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default BottomOptionsModal;
+export default BottomOptionModal;

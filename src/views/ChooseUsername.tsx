@@ -7,17 +7,15 @@ import {
     SafeAreaView,
     KeyboardAvoidingView,
     Platform,
-    Alert,
     TextInput,
-    Dimensions,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import COLORS from '../const/colors';
 import CommonHeader from '../components/CommonHeader';
 import { navigate } from '../navigation/navigationService';
 import { dispatchThunk } from '../utils/reduxUtils';
-import { sendCode } from '../redux/features/authSlice';
-import { ApiMessageType } from '../utils/enums';
+import { createUserHandle } from '../redux/features/authSlice';
+import { ApiMessageType, SessionMessageType } from '../utils/enums';
 import { useSelector } from 'react-redux';
 
 const ChooseUsername: React.FC<any> = ({ navigation }) => {
@@ -30,22 +28,63 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
     const [status, setStatus] = useState('');
     const [isValid, setIsValid] = useState(false);
 
-    const validateUsername = (username: string): boolean => {
-        const regex = /^[a-zA-Z0-9_]{5,15}$/;
-        return regex.test(username);
+
+    const getValidationError = (username: string): string => {
+        if (username.length === 0) {
+            return '';
+        }
+        if (username.length < 5) {
+            return 'Username must be longer than 4 characters.';
+        }
+        if (username.length > 15) {
+            return 'Username must be 15 characters or less.';
+        }
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            return 'Use only letters, numbers or underscores';
+        }
+        return '';
     };
 
     useEffect(() => {
-        setIsValid(username.length > 0 && validateUsername(username));
+        const validationError = getValidationError(username);
+        setIsValid(username.length > 0 && validationError === '');
+        if (validationError) {
+            setError(validationError);
+        } else if (!validationError && error && !error.includes('already taken')) {
+            setError('');
+        }
     }, [username]);
 
     const handleUsernameChange = (text: string) => {
         setUsername(text);
-        if (error) {
+        if (error && !error.includes('already taken') && !error.includes('Failed to create username')) {
             setError('');
         }
     };
 
+
+    const submitUsername = async (usernameValue: string) => {
+        setLoading(true);
+        await dispatchThunk(
+            createUserHandle,
+            SessionMessageType.CREATE_USER_HANDLE,
+            { username: usernameValue },
+            (response) => {
+                console.log('Username created successfully:', response);
+                setLoading(false);
+                navigate('ChooseAccount');
+            },
+            (error: any) => {
+                console.error('Failed to create username:', error);
+                if (error.message && error.message.includes('already taken')) {
+                    setError('Username is already taken. Please choose another.');
+                } else {
+                    setError(error.message || 'Failed to create username. Please try again.');
+                }
+                setLoading(false);
+            },
+        );
+    };
 
     const handleContinue = () => {
         if (!username.trim()) {
@@ -53,13 +92,14 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
             return;
         }
 
-        if (!validateUsername(username)) {
-            setError('Username must be 5-15 characters and contain only letters, numbers, or underscores');
+        const validationError = getValidationError(username);
+        if (validationError) {
+            setError(validationError);
             return;
         }
 
         setError('');
-        navigate('ChooseAccount');
+        submitUsername(username);
     };
 
 
@@ -126,21 +166,21 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
                         style={[
                             styles.button,
                             {
-                                backgroundColor: isValid ? COLORS.Black : '#F5F5F5',
+                                backgroundColor: isValid && !loading ? COLORS.Black : '#F5F5F5',
                             },
                         ]}
                         onPress={handleContinue}
-                        disabled={!isValid}
+                        disabled={!isValid || loading}
                     >
                         <Text
                             style={[
                                 styles.buttonText,
                                 {
-                                    color: isValid ? COLORS.white : '#999',
+                                    color: isValid && !loading ? COLORS.white : '#999',
                                 },
                             ]}
                         >
-                            Continue
+                            {loading ? 'Creating...' : 'Continue'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -161,6 +201,7 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingHorizontal: 20,
+        marginTop:10
     },
     inputContainer: {
         flexDirection: 'row',
@@ -210,9 +251,10 @@ const styles = StyleSheet.create({
         fontFamily: 'SFPRODISPLAYBOLD',
     },
     errorText: {
-        color: 'red',
+        color: '#FF3B30',
         marginTop: 8,
         fontSize: 14,
+        textAlign: 'center',
     },
     button: {
         marginHorizontal: 20,
