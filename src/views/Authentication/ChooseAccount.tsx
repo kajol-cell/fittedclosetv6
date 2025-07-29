@@ -12,7 +12,6 @@ import CommonHeader from '../../components/CommonHeader';
 import COLORS from '../../const/colors';
 import { navigate } from '../../navigation/navigationService';
 
-const { width, height } = Dimensions.get('window');
 
 interface ChooseAccountProps {
   navigation: any;

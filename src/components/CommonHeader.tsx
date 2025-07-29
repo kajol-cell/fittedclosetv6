@@ -113,9 +113,9 @@ const styles = StyleSheet.create({
     },
 
     simpleSubtitle: {
-        fontSize: 16,
-        color: '#888',
-        fontFamily: 'SFPRODISPLAYREGULAR',
+        fontSize: 14,
+        color: COLORS.grayInactive,
+        fontFamily: 'SFPRODISPLAYBOLD',
         textAlign: 'left',
         lineHeight: 20, marginTop: 10, marginBottom: 10,
     },

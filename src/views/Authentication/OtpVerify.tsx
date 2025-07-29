@@ -36,8 +36,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const { phoneNumber, countryCode, email } = route.params || {};
     const isPhoneVerification = !!phoneNumber;
     const isEmailVerification = !!email;
-
-    // Validate route parameters
+    
     if (!phoneNumber && !email) {
         console.error('Missing required route parameters: phoneNumber or email');
     }
@@ -71,11 +70,17 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         setCode(['', '', '', '', '', '']);
         setIsValid(false);
         verificationAttemptedRef.current = false;
+<<<<<<< HEAD
 
         // Reset focus to first input field
         setResetFocus(true);
 
         // Reset the focus flag after a short delay
+=======
+        
+        setResetFocus(true);
+        
+>>>>>>> 1354afb84490cf45c5e7ad0796aff282cf45cf0e
         setTimeout(() => {
             setResetFocus(false);
         }, 150);
@@ -100,7 +105,6 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 
     useEffect(() => {
         return () => {
-            // Cleanup all loading states on unmount
             setLoading(false);
             setIsVerifying(false);
             setError('');
@@ -131,7 +135,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                         authenticate();
                         verifyAndAuthenticate();
                     } else {
-                        setError('You have entered wrong OTP.');
+                        setError('Invalid code. Try again.');
                         resetVerificationState();
                     }
                 },
@@ -158,7 +162,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                     dispatcher: dispatch,
                     onAuthenticate: (success: any) => {
                         if (success) {
-                            navigate(ScreenType.MAIN);
+                            navigate('ChooseUsername');
                         } else {
                             createAccount(storedToken);
                         }
@@ -178,7 +182,6 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         setError('');
         setLoading(true);
 
-        // Validate required parameters
         if (!verificationToken) {
             setError('Verification token is required');
             setLoading(false);
@@ -215,7 +218,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
             };
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             const response = await fetch(`${API_CONFIG.SERVER_URL}/api/api/send`, {
                 method: 'POST',
@@ -231,12 +234,11 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 
             const responseText = await response.text();
 
-            // Check HTTP status code
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            let responseData;
+            let responseData: any;
             try {
                 responseData = JSON.parse(responseText);
             } catch (parseError) {
@@ -245,11 +247,11 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 
             if (responseData.responseCode === 200) {
                 if (responseData.payload && responseData.payload.authInfo) {
-                    // Prevent multiple navigation attempts
                     if (isNavigatingRef.current) {
                         return;
                     }
                     isNavigatingRef.current = true;
+<<<<<<< HEAD
 
                     // Clear all loading states immediately
                     setLoading(false);
@@ -261,6 +263,13 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 
                     // Navigate immediately
                     navigate(ScreenType.MAIN);
+=======
+                    setLoading(false);
+                    setIsVerifying(false);
+                    dispatch(hideLoading());
+                    dispatch(setAuthInfo(responseData.payload.authInfo));
+                    navigate('ChooseUsername');
+>>>>>>> 1354afb84490cf45c5e7ad0796aff282cf45cf0e
                 } else {
                     setError('Account creation failed. Please try again.');
                     setLoading(false);

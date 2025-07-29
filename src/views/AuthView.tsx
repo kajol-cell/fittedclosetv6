@@ -166,14 +166,12 @@ const AuthView: React.FC = () => {
 
     const googleCancel = () => {
         console.log("Google Sign-In Cancelled");
-        // Ensure loading state is reset when user cancels
         setLoading(false);
     };
 
 
     const googleError = (error: any) => {
         console.log('Google Sign In Error: ', error);
-        // Ensure loading state is reset when there's an error
         setLoading(false);
     };
 
