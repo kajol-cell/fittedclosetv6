@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import COLORS from '../const/colors';
 import FastImage from 'react-native-fast-image';
 
+import Ionicons from 'react-native-vector-icons/Ionicons';
 interface CommonHeaderProps {
     title: string;
     subtitle?: string;
@@ -28,14 +29,11 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
                 return (
                     <View style={styles.simpleContainer}>
                         <View style={styles.simpleHeaderRow}>
+
                             {showBackButton && (
 
                                 <TouchableOpacity style={styles.backButtonContainer} onPress={onBackPress}>
-                                    <FastImage
-                                        source={require('../assets/images/backbutton.png')}
-                                        resizeMode="contain"
-                                        style={styles.backButton}
-                                    />
+                                    <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -52,11 +50,8 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
                     <View style={styles.centeredHeader}>
                         {showBackButton && (
                             <TouchableOpacity onPress={onBackPress}>
-                                <FastImage
-                                    source={require('../assets/images/backbutton.png')}
-                                    resizeMode='contain'
-                                    style={styles.backButton}
-                                />
+                                <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
+
                             </TouchableOpacity>
                         )}
                         <Text style={[styles.centeredTitle, titleStyle]} numberOfLines={1}>
@@ -70,11 +65,8 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
                     <>
                         <View style={styles.header}>
                             <TouchableOpacity onPress={onBackPress}>
-                                <FastImage
-                                    source={require('../assets/images/backbutton.png')}
-                                    resizeMode='contain'
-                                    style={styles.backButton}
-                                />
+                                <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
+
                             </TouchableOpacity>
                         </View>
 
@@ -99,8 +91,8 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 const styles = StyleSheet.create({
     simpleContainer: {
         width: '100%',
-        padding:20,
-        paddingTop:Dimensions.get('window').height * 0.06,
+        // padding:20,
+        paddingTop: Dimensions.get('window').height * 0.06,
     },
 
     simpleHeaderRow: {
@@ -115,7 +107,7 @@ const styles = StyleSheet.create({
     },
 
     simpleTitle: {
-        fontSize:26,
+        fontSize: 26,
         color: COLORS.Black,
         fontFamily: 'SFPRODISPLAYBOLD',
     },
@@ -125,9 +117,7 @@ const styles = StyleSheet.create({
         color: COLORS.grayInactive,
         fontFamily: 'SFPRODISPLAYBOLD',
         textAlign: 'left',
-        fontWeight:'600',
-        lineHeight: 20,marginTop:10,
-        marginBottom:10,opacity:0.7
+        lineHeight: 20, marginTop: 10, marginBottom: 10,
     },
     container: {
         width: '100%',
@@ -139,8 +129,8 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
     },
     backButton: {
-        height:12,
-        width: 12,alignSelf:'center'
+        height: 14,
+        width: 14, alignSelf: 'center'
     },
     content: {
         paddingHorizontal: 24,
@@ -149,10 +139,10 @@ const styles = StyleSheet.create({
     },
     backButtonContainer: {
         backgroundColor: '#F5F5F5',
-        padding:6, borderRadius: 20
+        padding: 6, borderRadius: 20
     },
     title: {
-        fontSize:32,
+        fontSize: 32,
         color: COLORS.Black,
         fontFamily: 'SFPRODISPLAYBOLD',
         textAlign: 'center',

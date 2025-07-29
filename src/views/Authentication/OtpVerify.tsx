@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import COLORS from '../../const/colors';
 import { navigate } from '../../navigation/navigationService';
-import { ApiMessageType,  ScreenType } from '../../utils/enums';
+import { ApiMessageType, ScreenType } from '../../utils/enums';
 import { dispatchThunk } from '../../utils/reduxUtils';
 import { sendCode, verifyCode } from '../../redux/features/authSlice';
 import { setAuthInfo, setVerificationToken } from '../../redux/features/sessionSlice';
@@ -22,6 +22,8 @@ import { API_CONFIG } from '../../config/appConfig';
 import LoadingWrapper from '../../components/LoadingWrapper';
 import VerifyCode from '../../components/VerifyCode';
 import CommonHeader from '../../components/CommonHeader';
+import ThemeStyle from '../../const/ThemeStyle';
+import Button from '../../components/Button';
 
 interface OtpVerifyProps {
     navigation: any;
@@ -38,7 +40,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     if (!phoneNumber && !email) {
         console.error('Missing required route parameters: phoneNumber or email');
     }
-    
+
     const [contactInfo, setContactInfo] = useState(isPhoneVerification ? phoneNumber : isEmailVerification ? email : '');
     const [authMethod, setAuthMethod] = useState(isPhoneVerification ? 'phoneNumber' : isEmailVerification ? 'email' : '');
     const [error, setError] = useState('');
@@ -68,9 +70,17 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         setCode(['', '', '', '', '', '']);
         setIsValid(false);
         verificationAttemptedRef.current = false;
+<<<<<<< HEAD
+
+        // Reset focus to first input field
+        setResetFocus(true);
+
+        // Reset the focus flag after a short delay
+=======
         
         setResetFocus(true);
         
+>>>>>>> 1354afb84490cf45c5e7ad0796aff282cf45cf0e
         setTimeout(() => {
             setResetFocus(false);
         }, 150);
@@ -241,11 +251,25 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                         return;
                     }
                     isNavigatingRef.current = true;
+<<<<<<< HEAD
+
+                    // Clear all loading states immediately
+                    setLoading(false);
+                    setIsVerifying(false);
+                    dispatch(hideLoading());
+
+                    // Set auth info
+                    dispatch(setAuthInfo(responseData.payload.authInfo));
+
+                    // Navigate immediately
+                    navigate(ScreenType.MAIN);
+=======
                     setLoading(false);
                     setIsVerifying(false);
                     dispatch(hideLoading());
                     dispatch(setAuthInfo(responseData.payload.authInfo));
                     navigate('ChooseUsername');
+>>>>>>> 1354afb84490cf45c5e7ad0796aff282cf45cf0e
                 } else {
                     setError('Account creation failed. Please try again.');
                     setLoading(false);
@@ -324,9 +348,9 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.container}
+            style={ThemeStyle.container}
         >
-            <SafeAreaView style={styles.safeArea}>
+            <SafeAreaView style={ThemeStyle.mainContainer}>
                 <CommonHeader
                     title={getTitle()}
                     subtitle={getSubtitle()}
@@ -350,27 +374,14 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                 />
 
                 <View style={styles.buttonWrapper}>
-                    <TouchableOpacity
-                        style={[
-                            styles.button,
-                            {
-                                backgroundColor: isValid && !loading ? COLORS.Black : '#F5F5F5',
-                            },
-                        ]}
+                    <Button
+                        title={loading ? 'Verifying...' : 'Continue'}
                         onPress={handleVerifyCode}
                         disabled={!isValid || loading}
-                    >
-                        <Text
-                            style={[
-                                styles.buttonText,
-                                {
-                                    color: isValid && !loading ? COLORS.white : '#999',
-                                },
-                            ]}
-                        >
-                            {loading ? 'Verifying...' : 'Continue'}
-                        </Text>
-                    </TouchableOpacity>
+                        buttonType={true}
+                        bgColor={isValid && !loading ? COLORS.primary : COLORS.whiteAlt}
+                        btnTextColor={isValid && !loading ? COLORS.whiteAlt : COLORS.grayInactive}
+                    />
                 </View>
             </SafeAreaView>
         </KeyboardAvoidingView>
@@ -380,25 +391,6 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 export default OtpVerify;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.white,
-    },
-    safeArea: {
-        flex: 1,
-    },
-    button: {
-        marginHorizontal: 20,
-        marginBottom: 20,
-        height: 50,
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    buttonText: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
     buttonWrapper: {
         flex: 1,
         justifyContent: 'flex-end',
