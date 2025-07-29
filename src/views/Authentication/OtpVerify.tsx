@@ -36,7 +36,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     const { phoneNumber, countryCode, email } = route.params || {};
     const isPhoneVerification = !!phoneNumber;
     const isEmailVerification = !!email;
-    
+
     if (!phoneNumber && !email) {
         console.error('Missing required route parameters: phoneNumber or email');
     }
@@ -70,17 +70,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
         setCode(['', '', '', '', '', '']);
         setIsValid(false);
         verificationAttemptedRef.current = false;
-<<<<<<< HEAD
-
-        // Reset focus to first input field
         setResetFocus(true);
-
-        // Reset the focus flag after a short delay
-=======
-        
-        setResetFocus(true);
-        
->>>>>>> 1354afb84490cf45c5e7ad0796aff282cf45cf0e
         setTimeout(() => {
             setResetFocus(false);
         }, 150);
@@ -251,25 +241,11 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                         return;
                     }
                     isNavigatingRef.current = true;
-<<<<<<< HEAD
-
-                    // Clear all loading states immediately
-                    setLoading(false);
-                    setIsVerifying(false);
-                    dispatch(hideLoading());
-
-                    // Set auth info
-                    dispatch(setAuthInfo(responseData.payload.authInfo));
-
-                    // Navigate immediately
-                    navigate(ScreenType.MAIN);
-=======
                     setLoading(false);
                     setIsVerifying(false);
                     dispatch(hideLoading());
                     dispatch(setAuthInfo(responseData.payload.authInfo));
                     navigate('ChooseUsername');
->>>>>>> 1354afb84490cf45c5e7ad0796aff282cf45cf0e
                 } else {
                     setError('Account creation failed. Please try again.');
                     setLoading(false);
