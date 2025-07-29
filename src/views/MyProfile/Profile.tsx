@@ -13,6 +13,7 @@ import COLORS from '../../const/colors';
 import CommonHeader from '../../components/CommonHeader';
 import { Icon } from 'react-native-paper';
 import ImageUploadModal from '../../components/ImageUploadModal';
+import { navigate } from '../../navigation/navigationService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,11 +46,11 @@ const Profile: React.FC = () => {
     };
 
     const handleContinue = () => {
-        // Handle continue action
+        navigate('MediaPermission')
     };
 
     const handleSkip = () => {
-        // Handle skip action
+        navigate('MediaPermission')
     };
 
     const handleBack = () => {
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
 
     placeholderIcon: {
         fontSize: 32,
-        color: COLORS.PlaceHolder,
+        color: COLORS.primaryDark,
     },
     cameraButton: {
         position: 'absolute',

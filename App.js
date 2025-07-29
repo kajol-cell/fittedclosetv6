@@ -42,6 +42,7 @@ import Profile from './src/views/MyProfile/Profile';
 import WalkthroughView from './src/views/WalkthroughView';
 import CameraPermissionScreen from './src/components/CameraPermissionScreen';
 import CameraScreen from './src/components/CameraScreen';
+import ChooseCategory from './src/views/Authentication/ChooseCategory';
 
 // Define a custom theme with a blue primary color
 const theme = {
@@ -257,6 +258,13 @@ const App = () => {
                   <Stack.Screen
                     name="Profile"
                     component={Profile}
+                    options={{
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="ChooseCategory"
+                    component={ChooseCategory}
                     options={{
                       headerShown: false,
                     }}

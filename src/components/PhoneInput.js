@@ -23,10 +23,9 @@ const PhoneInput = ({
 }) => {
   const countryCodes = useSelector(state => state.auth.countryCodes);
   const defaultCode = countryCodes.find(
-    country =>
-      country?.phoneCode === phoneData.countryCode ||
-      (country?.phoneCode === '+1' && country?.code === 'US'),
+    country => country?.code === 'NO'
   );
+  console.log(defaultCode);
   const [phone, setPhone] = useState(phoneData.phone || '');
   const [selectedCountry, setSelectedCountry] = useState(defaultCode);
   const [internalError, setInternalError] = useState('');
@@ -92,12 +91,16 @@ const PhoneInput = ({
         <TextInput
           style={styles.phoneInput}
           placeholder='765 4321'
-          placeholderTextColor={COLORS.grayInactive}
+          placeholderTextColor={COLORS.secondary}
           mode='outlined'
-          activeOutlineColor={COLORS.grayBackground}
+          activeOutlineColor={COLORS.grayLight}
           value={phone}
           onChangeText={handlePhoneChange}
-          outlineStyle={{ borderRadius: 15 }}
+          outlineStyle={{
+            borderRadius: 15,
+            borderColor: COLORS.grayBackground,
+            borderWidth: 1.6,
+          }}
           keyboardType="phone-pad"
           autoCorrect={false}
           error={!!displayError}
@@ -123,52 +126,52 @@ const PhoneInput = ({
               </TouchableOpacity>
             </View>
 
-              <TextInput
-                mode="flat"
-                placeholder="Search"
-                placeholderTextColor={COLORS.grayInactive}
-                placeholderStyle={{ fontFamily: 'SFPRODISPLAYBOLD' }}
-                style={styles.searchInput}
-                left={<TextInput.Icon icon="magnify" color={COLORS.grayInactive} />}
-                underlineStyle={{ backgroundColor: 'transparent' }}
-                value={searchText}
-                onChangeText={setSearchText}
-              />
+            <TextInput
+              mode="flat"
+              placeholder="Search"
+              placeholderTextColor={COLORS.grayInactive}
+              placeholderStyle={{ fontFamily: 'SFPRODISPLAYBOLD' }}
+              style={styles.searchInput}
+              left={<TextInput.Icon icon="magnify" color={COLORS.grayInactive} />}
+              underlineStyle={{ backgroundColor: 'transparent' }}
+              value={searchText}
+              onChangeText={setSearchText}
+            />
 
-              <FlatList
-                data={filteredCodes}
-                keyExtractor={item => item.code}
-                renderItem={({ item }) => {
-                  const isSelected = selectedCountry?.code === item.code;
-                  return (
-                    <TouchableOpacity
-                      style={[
-                        styles.optionRowNew,
-                        isSelected && styles.selectedRow,
-                      ]}
-                      onPress={() => handleCountryChange(item)}>
-                      <Image
-                        source={{
-                          uri: `https://flagcdn.com/w40/${item.code.toLowerCase()}.png`,
-                        }}
-                        style={styles.flagIcon}
-                      />
-                      <Text style={styles.codeText}>
-                        {item.phoneCode}
-                      </Text>
-                      <Text style={styles.optionTextNew}>
-                        {item.name}
-                      </Text>
-                      {isSelected && (
-                        <Text style={styles.checkIcon}>✔</Text>
-                      )}
-                    </TouchableOpacity>
-                  );
-                }}
-                showsVerticalScrollIndicator={false}
-              />
-            </View>
+            <FlatList
+              data={filteredCodes}
+              keyExtractor={item => item.code}
+              renderItem={({ item }) => {
+                const isSelected = selectedCountry?.code === item.code;
+                return (
+                  <TouchableOpacity
+                    style={[
+                      styles.optionRowNew,
+                      isSelected && styles.selectedRow,
+                    ]}
+                    onPress={() => handleCountryChange(item)}>
+                    <Image
+                      source={{
+                        uri: `https://flagcdn.com/w40/${item.code.toLowerCase()}.png`,
+                      }}
+                      style={styles.flagIcon}
+                    />
+                    <Text style={styles.codeText}>
+                      {item.phoneCode}
+                    </Text>
+                    <Text style={styles.optionTextNew}>
+                      {item.name}
+                    </Text>
+                    {isSelected && (
+                      <Text style={styles.checkIcon}>✔</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+              showsVerticalScrollIndicator={false}
+            />
           </View>
+        </View>
       </Modal>
 
     </View>
@@ -183,9 +186,12 @@ const styles = StyleSheet.create({
   countryCodeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
     borderRadius: 15,
     borderWidth: 2,
+    width: Dimensions.get('window').width * 0.12,
+    height: Dimensions.get('window').height * 0.05,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderColor: COLORS.grayBackground,
   },
   disabled: {
@@ -197,11 +203,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal:10
+    marginHorizontal: 10
   },
   phoneInput: {
-    flex: 1,
-    marginHorizontal: 10
+    marginHorizontal: 10,
+    height: Dimensions.get('window').height * 0.05,
+    width: Dimensions.get('window').width * 0.7,
   },
   modalContainer: {
     flex: 1,
@@ -249,7 +256,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     maxHeight: '90%',
     paddingTop: 20,
-    paddingHorizontal:20,
+    paddingHorizontal: 20,
     paddingBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -281,8 +288,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginBottom: 10,
-    borderBottomRightRadius:20,
-    borderBottomLeftRadius:20,
+    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 20,
   },
   optionRowNew: {
     flexDirection: 'row',
@@ -292,26 +299,26 @@ const styles = StyleSheet.create({
   optionTextNew: {
     flex: 1,
     fontSize: 18,
-    fontFamily:'SFPRODISPLAYBOLD', marginHorizontal:20
+    fontFamily: 'SFPRODISPLAYBOLD', marginHorizontal: 20
   },
   codeText: {
     fontSize: 18,
-    color:COLORS.grayInactive,
-    fontFamily:'SFPRODISPLAYBOLD'
+    color: COLORS.grayInactive,
+    fontFamily: 'SFPRODISPLAYBOLD'
   },
   checkIcon: {
     fontSize: 12,
     color: COLORS.Black,
-    marginRight:10,
+    marginRight: 10,
     backgroundColor: COLORS.Black,
-    borderRadius:20,height:25,width:25,
-    textAlign:'center',
-    textAlignVertical:'center',
-    color:'white'
+    borderRadius: 20, height: 25, width: 25,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    color: 'white'
   },
   selectedRow: {
     backgroundColor: '#f4f4f4',
-    borderRadius:20,
+    borderRadius: 20,
   },
 
 });

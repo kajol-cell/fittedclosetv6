@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,18 @@ import {
 import COLORS from '../const/colors';
 import { HelperText } from 'react-native-paper';
 
-const { width } = Dimensions.get('window');
-
-const VerifyCode = ({ onResendCode, status,  code, setCode, error, resetFocus }) => {
+const VerifyCode = ({ onResendCode, status, code, setCode, error, resetFocus }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRefs = useRef([]);
+  const [timeLeft, setTimeLeft] = useState(30);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   React.useEffect(() => {
     if (resetFocus && inputRefs.current[0]) {
@@ -88,11 +95,18 @@ const VerifyCode = ({ onResendCode, status,  code, setCode, error, resetFocus })
 
 
       <TouchableOpacity
-        style={styles.resendButton}
-        onPress={onResendCode}
-        disabled={status === 'loading'}
+        style={timeLeft > 0 ? styles.resendButton : styles.sendCode}
+        onPress={() => {
+          if (timeLeft <= 0 && status !== 'loading') {
+            onResendCode();
+            setTimeLeft(30);
+          }
+        }}
+        disabled={status === 'loading' || timeLeft > 0}
       >
-        <Text style={styles.resendButtonText}>Resend Code</Text>
+        <Text style={[styles.resendButtonText, { color: timeLeft > 0 ? COLORS.secondaryDark : COLORS.Black }]}>
+          {timeLeft > 0 ? `Send new code in ${timeLeft}s` : 'Send new code'}
+        </Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
@@ -112,8 +126,8 @@ const styles = StyleSheet.create({
   inputBox: {
     width: 45,
     height: 47,
-    borderWidth: 1,
-    borderColor: COLORS.grayInactive,
+    borderWidth: 1.2,
+    borderColor: COLORS.graySubtle,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -137,14 +151,25 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   resendButton: {
-    alignItems: 'center',
-    paddingVertical: 10,
+    borderColor: COLORS.graySubtle,
+    borderWidth: 1.2,
+    borderRadius: 10,
+    marginBottom: 10, width: '40%', height: '8%',
+    justifyContent: 'center', alignItems: 'center',
+    marginTop: Dimensions.get('window').height * 0.02
+  },
+  sendCode: {
+    borderRadius: 15,
+    marginBottom: 10, width: '35%', height: '8%',
+    justifyContent: 'center', alignItems: 'center',
+    marginTop: Dimensions.get('window').height * 0.02,
+    backgroundColor: COLORS.whiteSoft,
   },
   resendButtonText: {
-    color: COLORS.Black,
-    fontSize: 16,
-    fontWeight: '500',
-    fontFamily: 'SFPRODISPLAYMEDIUM',
+    color: COLORS.secondaryDark,
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'SFPRODISPLAYREGULAR',
   },
 });
 

@@ -125,7 +125,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                         authenticate();
                         verifyAndAuthenticate();
                     } else {
-                        setError('You have entered wrong OTP.');
+                        setError('Invalid code. Try again.');
                         resetVerificationState();
                     }
                 },
@@ -152,7 +152,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                     dispatcher: dispatch,
                     onAuthenticate: (success: any) => {
                         if (success) {
-                            navigate('Walkthrough');
+                            navigate('ChooseUsername');
                         } else {
                             createAccount(storedToken);
                         }
@@ -245,7 +245,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                     setIsVerifying(false);
                     dispatch(hideLoading());
                     dispatch(setAuthInfo(responseData.payload.authInfo));
-                    navigate(ScreenType.MAIN);
+                    navigate('ChooseUsername');
                 } else {
                     setError('Account creation failed. Please try again.');
                     setLoading(false);

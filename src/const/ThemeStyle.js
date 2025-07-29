@@ -99,7 +99,9 @@ const ThemeStyle = StyleSheet.create({
     fontFamily: 'SFPRODISPLAYBOLD',
     lineHeight: 32,
     fontSize: 28,
-    width:'60%', alignSelf:'center',textAlign:'center'
+    alignSelf: 'center',
+    textAlign: 'center',
+    numberOfLines: 2,width:'80%'
   },
   H3: {
     fontFamily: 'SFPRODISPLAYMEDIUM',

@@ -59,7 +59,7 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
         }
 
         setError('');
-        navigate('Profile');
+        navigate('ChooseAccount');
     };
 
 
