@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
-import {callApi, handleUnexpectedError} from '../api';
+import {callApi, callSession, handleUnexpectedError} from '../api';
 import {setAuthInfo} from './sessionSlice';
 import {API_CONFIG} from '../../config/appConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -149,7 +149,35 @@ export const getCountryCodes = createAuthThunk(
 
 export const sendCode = createGenericAuthThunk('auth/sendCode');
 export const verifyCode = createGenericAuthThunk('auth/verifyCode');
-export const createUserHandle = createGenericAuthThunk('auth/createUserHandle');
+
+export const createUserHandle = createAsyncThunk(
+  'auth/createUserHandle',
+  async (
+    {messageType, payload = {}, onSuccess = () => {}, onError = () => {}},
+    {getState, rejectWithValue, dispatch},
+  ) => {
+    try {
+      const sessionKey = await handleApiAuthenticate(getState, dispatch);
+      console.log('createUserHandle - messageType:', messageType);
+      console.log('createUserHandle - payload:', payload);
+      
+      const response = await callSession(messageType, payload);
+      const {responseCode, responseDescription, payload: responseData} = response;
+
+      if (responseCode !== 200) {
+        onError(responseDescription || 'Unknown error');
+        return rejectWithValue({
+          code: responseCode,
+          message: responseDescription || 'Unknown error',
+        });
+      }
+      onSuccess(responseData);
+      return responseData;
+    } catch (error) {
+      return handleUnexpectedError(error, onError, rejectWithValue);
+    }
+  },
+);
 
 const authSlice = createSlice({
   name: 'auth',

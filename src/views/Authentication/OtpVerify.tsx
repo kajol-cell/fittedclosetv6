@@ -324,7 +324,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={ThemeStyle.container}
+            style={styles.mainContainer}
         >
             <SafeAreaView style={ThemeStyle.mainContainer}>
                 <CommonHeader
@@ -367,6 +367,10 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
 export default OtpVerify;
 
 const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+        backgroundColor: COLORS.white,
+    },
     buttonWrapper: {
         flex: 1,
         justifyContent: 'flex-end',

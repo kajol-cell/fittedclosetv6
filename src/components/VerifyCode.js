@@ -154,13 +154,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.graySubtle,
     borderWidth: 1.2,
     borderRadius: 10,
-    marginBottom: 10, width: '40%', height: '8%',
+    marginBottom: 10, width: '45%', height: '8%',
     justifyContent: 'center', alignItems: 'center',
     marginTop: Dimensions.get('window').height * 0.02
   },
   sendCode: {
     borderRadius: 15,
-    marginBottom: 10, width: '35%', height: '8%',
+    marginBottom: 10, width: '40%', height: '8%',
     justifyContent: 'center', alignItems: 'center',
     marginTop: Dimensions.get('window').height * 0.02,
     backgroundColor: COLORS.whiteSoft,

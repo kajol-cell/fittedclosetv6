@@ -31,14 +31,31 @@ export const clearImageCache = async () => {
 export const extractErrorMessage = (error, defaultMessage = 'An error occurred') => {
   if (!error) return defaultMessage;
   
-  // Handle different error formats
   if (typeof error === 'string') return error;
   
   if (error.message) return error.message;
   
   if (error.payload && error.payload.message) return error.payload.message;
   
-  if (error.responseDescription) return error.responseDescription;
+  if (error.responseDescription && error.responseDescription.trim() !== '') {
+    return error.responseDescription;
+  }
+  
+  if (error.code === 500) {
+    return 'Server error occurred. Please try again in a moment.';
+  }
+  
+  if (error.code === 401) {
+    return 'Authentication failed. Please sign in again.';
+  }
+  
+  if (error.code === 403) {
+    return 'Access denied. Please check your permissions.';
+  }
+  
+  if (error.code === 404) {
+    return 'Resource not found. Please try again.';
+  }
   
   return defaultMessage;
 };

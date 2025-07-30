@@ -9,18 +9,15 @@ import {
     Platform,
     TextInput,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
 import COLORS from '../const/colors';
 import CommonHeader from '../components/CommonHeader';
 import { navigate } from '../navigation/navigationService';
 import { dispatchThunk } from '../utils/reduxUtils';
 import { createUserHandle } from '../redux/features/authSlice';
-import { ApiMessageType, SessionMessageType } from '../utils/enums';
-import { useSelector } from 'react-redux';
+import {  SessionMessageType } from '../utils/enums';
+import { HelperText } from 'react-native-paper';
 
 const ChooseUsername: React.FC<any> = ({ navigation }) => {
-    const dispatch = useDispatch();
-    const { user } = useSelector((state: any) => state.auth);
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -68,18 +65,23 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
         await dispatchThunk(
             createUserHandle,
             SessionMessageType.CREATE_USER_HANDLE,
-            { username: usernameValue },
+            { handle: usernameValue },
             (response) => {
                 console.log('Username created successfully:', response);
                 setLoading(false);
                 navigate('ChooseAccount');
             },
             (error: any) => {
-                console.error('Failed to create username:', error);
                 if (error.message && error.message.includes('already taken')) {
                     setError('Username is already taken. Please choose another.');
+                } else if (error.code === 500 || (error.message && error.message.includes('500'))) {
+                    setError('Server error occurred. Please try again in a moment.');
+                } else if (error.responseDescription && error.responseDescription.trim() !== '') {
+                    setError(error.responseDescription);
+                } else if (error.message && error.message.trim() !== '') {
+                    setError(error.message);
                 } else {
-                    setError(error.message || 'Failed to create username. Please try again.');
+                    setError('Failed to create username. Please try again.');
                 }
                 setLoading(false);
             },
@@ -109,7 +111,7 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
             setUsername('');
             setError('');
         } else {
-            navigation.goBack();
+            navigation.goBack()
         }
     };
 
@@ -158,7 +160,7 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
                             </TouchableOpacity>
                         )}
                     </View>
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                    {error ? <HelperText type="error">{error}</HelperText> : null}
                 </View>
 
                 <View style={styles.buttonWrapper}>
@@ -219,6 +221,7 @@ const styles = StyleSheet.create({
     },
     clearButton: {
         padding: 8,
+        justifyContent:'center'
     },
     clearButtonText: {
         fontSize: 16,
@@ -249,12 +252,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: 'white',
         fontFamily: 'SFPRODISPLAYBOLD',
-    },
-    errorText: {
-        color: '#FF3B30',
-        marginTop: 8,
-        fontSize: 14,
-        textAlign: 'center',
     },
     button: {
         marginHorizontal: 20,

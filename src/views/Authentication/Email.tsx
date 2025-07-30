@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 0.8,
         borderColor: '#F5F5F5',
-        padding: 3,
+        padding: 3,width:'90%', alignSelf:'center'
     },
     emailInput: {
         flex: 1,
