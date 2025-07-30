@@ -12,7 +12,6 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ensureCameraPermission } from '../utils/ensureCameraPermissions';
 
-
 interface ImageUploadModalProps {
   onImageSelected?: (image: any, photoType: 'profile' | 'cover') => void;
   photoType?: 'profile' | 'cover';

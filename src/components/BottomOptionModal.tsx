@@ -148,7 +148,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     optionIcon: {
-        marginRight: Dimensions.get('window').width * 0.18,
+        marginRight: Dimensions.get('window').width * 0.14,
+        justifyContent:'center',alignItems:'center'
     },
     optionText: {
         fontSize: 18,

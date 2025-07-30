@@ -15,6 +15,7 @@ import COLORS from '../../const/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { navigate } from '../../navigation/navigationService';
+import FastImage from 'react-native-fast-image';
 
 interface MediaPermissionProps {
     navigation: any;
@@ -90,12 +91,11 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
 
     const handleContinue = () => {
         onComplete?.();
-        navigation.goBack();
+       navigate('Walkthrough');
     };
 
     const handleSkip = () => {
         onComplete?.();
-        navigate('ChooseUsername');
     };
 
     const renderPermissionCard = (
@@ -116,7 +116,11 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
             <View style={styles.permissionCard}>
                 <View style={styles.iconContainer}>
                     <View style={styles.iconStyle}>
+                    {showNewBadge ? (
+                        <FastImage source={require('../../assets/images/gmail.png')} style={{ width: 24, height: 24 }} />
+                    ) : (
                         <Ionicons name={icon as any} size={24} color={COLORS.Black} />
+                    )}
                     </View>
                     {showNewBadge && (
                         <View style={styles.newBadgeContainer}>
@@ -249,15 +253,15 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end'
     },
     newBadgeContainer: {
-        borderWidth: 2,
-        borderColor: COLORS.btnColor,
+        borderWidth:1.5,
+        borderColor: COLORS.tertiary,
         borderRadius: 5,
         paddingHorizontal: 7,
         marginLeft: 10, justifyContent: 'center'
     },
     newBadgeText: {
         fontSize: 10,
-        color: COLORS.btnColor,
+        color: COLORS.tertiary,
         fontFamily: 'SFPRODISPLAYBOLD',
         alignSelf: 'center'
     },

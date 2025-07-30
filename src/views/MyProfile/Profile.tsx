@@ -13,23 +13,22 @@ import COLORS from '../../const/colors';
 import CommonHeader from '../../components/CommonHeader';
 import { Icon } from 'react-native-paper';
 import ImageUploadModal from '../../components/ImageUploadModal';
+import ChangeProfileImage from '../../components/ChangeProfileImage';
 import { navigate } from '../../navigation/navigationService';
-
-const { width, height } = Dimensions.get('window');
+import { useSelector } from 'react-redux';
+import { selectAuthInfo } from '../../redux/features/sessionSlice';
 
 const Profile: React.FC = () => {
     const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
     const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
     const imageModalRef = useRef(null);
+    const changeProfileImageRef = useRef(null);
     const [currentPhotoType, setCurrentPhotoType] = useState<'profile' | 'cover'>('profile');
-
-    const handleBackPress = () => {
-        // Handle back navigation
-    };
+    const authInfo = useSelector(selectAuthInfo);
 
     const handleAddProfilePhoto = () => {
         setCurrentPhotoType('profile');
-        imageModalRef.current?.open();
+        changeProfileImageRef.current?.open();
     };
 
     const handleAddCoverPhoto = () => {
@@ -38,9 +37,7 @@ const Profile: React.FC = () => {
     };
 
     const handleImageSelected = (image: any, photoType: any) => {
-        if (photoType === 'profile') {
-            setProfilePhoto(image.uri);
-        } else {
+        if (photoType === 'cover') {
             setCoverPhoto(image.uri);
         }
     };
@@ -56,6 +53,9 @@ const Profile: React.FC = () => {
     const handleBack = () => {
         console.log('Profile Completed')
     };
+
+    // Get profile image from Redux store if available
+    const profileImageUrl = authInfo?.profile?.imageUrl || profilePhoto;
 
     return (
         <>
@@ -74,7 +74,11 @@ const Profile: React.FC = () => {
                         <View style={styles.photoContainer}>
                             <View style={styles.coverPhotoContainer}>
                                 <FastImage
-                                    source={{ uri: coverPhoto }}
+                                    source={{
+                                        uri: coverPhoto,
+                                        priority: FastImage.priority.low,
+                                        cache: FastImage.cacheControl.immutable
+                                    }}
                                     style={styles.coverPhoto}
                                     resizeMode="cover"
                                 />
@@ -87,9 +91,13 @@ const Profile: React.FC = () => {
                             </View>
 
                             <View style={{ bottom: Dimensions.get('window').height * 0.08 }}>
-                                {profilePhoto ? (
+                                {profileImageUrl ? (
                                     <FastImage
-                                        source={{ uri: profilePhoto }}
+                                        source={{
+                                            uri: profileImageUrl,
+                                            priority: FastImage.priority.low,
+                                            cache: FastImage.cacheControl.immutable,
+                                        }}
                                         style={styles.profilePhoto}
                                         resizeMode="cover"
                                     />
@@ -113,14 +121,14 @@ const Profile: React.FC = () => {
                     <TouchableOpacity
                         style={[
                             styles.continueButton,
-                            (!profilePhoto && !coverPhoto) && styles.continueButtonDisabled
+                            (!profileImageUrl && !coverPhoto) && styles.continueButtonDisabled
                         ]}
                         onPress={handleContinue}
-                        disabled={!profilePhoto && !coverPhoto}
+                        disabled={!profileImageUrl && !coverPhoto}
                     >
                         <Text style={[
                             styles.continueButtonText,
-                            (!profilePhoto && !coverPhoto) && styles.continueButtonTextDisabled
+                            (!profileImageUrl && !coverPhoto) && styles.continueButtonTextDisabled
                         ]}>Continue</Text>
                     </TouchableOpacity>
 
@@ -138,6 +146,8 @@ const Profile: React.FC = () => {
                 onImageSelected={handleImageSelected}
                 photoType={currentPhotoType}
             />
+
+            <ChangeProfileImage ref={changeProfileImageRef} />
         </>
     );
 };
@@ -193,7 +203,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         justifyContent: 'center',
         alignItems: 'center',
-        right: 5, padding: 10, marginTop: Dimensions.get('window').height * 0.12
+        right: 5, padding: 10, marginTop: Dimensions.get('window').height * 0.10
     },
     cameraIcon: {
         fontSize: 16,

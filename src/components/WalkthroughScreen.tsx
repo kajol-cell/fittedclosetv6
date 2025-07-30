@@ -99,7 +99,6 @@ const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete }) => 
   };
 
   const handlePhotoTaken = (photo: any) => {
-    // Handle the taken photo - you can process it here
     console.log('Photo taken:', photo);
     onComplete();
   };

@@ -63,8 +63,9 @@ const COLORS = {
   semiTransparentBlack10: 'rgba(0, 0, 0, 0.1)',
   semiTransparentBlack80: 'rgba(0, 0, 0, 0.8)',
 
-  // Gradients (placeholders)
+  // Gradients
   linearBlue: 'linear-gradient(90deg, #3B82F7, #007AFF)',
+  linearBlueColors: ['#3B82F7', '#007AFF'],
   radialHighlight: 'radial-gradient(circle, #EA4335, #FF0000)',
   Black:'#000000',
 };
