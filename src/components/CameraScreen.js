@@ -335,15 +335,17 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
 
   if (screenState === 'pieceReview' && pieceData) {
     return (
-      <View style={styles.fullScreenContainer}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.white} />
+      <View style={[styles.fullScreenContainer, {backgroundColor: COLORS.white}]}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
               <Ionicons name="chevron-back" size={22} color={COLORS.Black} />
             </TouchableOpacity>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerText}>{pieceData.name}</Text>
+            </View>
             <TouchableOpacity style={styles.moreButton}>
-              <MaterialCommunityIcons name="dots-vertical" size={24} color={COLORS.Black} />
+              <MaterialCommunityIcons name="dots-horizontal" size={24} color={COLORS.Black} />
             </TouchableOpacity>
           </View>
 
@@ -721,6 +723,17 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontFamily: 'SFPRODISPLAYBOLD',
+  },
+  headerText: {
+    fontSize: 18,
+    fontFamily: 'SFPRODISPLAYREGULAR',
+    color: COLORS.Black,
+    textAlign: 'center',
+  },
+  headerTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
