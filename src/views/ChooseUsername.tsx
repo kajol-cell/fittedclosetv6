@@ -69,7 +69,7 @@ const ChooseUsername: React.FC<any> = ({ navigation }) => {
             (response) => {
                 console.log('Username created successfully:', response);
                 setLoading(false);
-                navigate('ChooseCategory');
+                navigate('ChooseAccount');
             },
             (error: any) => {
                 if (error.message && error.message.includes('already taken')) {

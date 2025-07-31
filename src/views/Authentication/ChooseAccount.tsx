@@ -21,7 +21,7 @@ const ChooseAccount: React.FC<ChooseAccountProps> = ({ navigation }) => {
   const [selectedAccountType, setSelectedAccountType] = useState<'public' | 'private'>('public');
 
   const handleContinue = () => {
-    navigate('MediaPermission')
+    navigate('ChooseCategory')
   };
 
   const handleBackPress = () => {

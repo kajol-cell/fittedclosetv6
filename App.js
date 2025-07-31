@@ -1,7 +1,7 @@
 import 'react-native-pager-view';
 import 'react-native-gesture-handler';
 import React, {useEffect, useState} from 'react';
-import {AppState, Image, Platform, StyleSheet} from 'react-native';
+import {AppState,  Platform, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -40,16 +40,15 @@ import ChooseUsername from './src/views/ChooseUsername';
 import Profile from './src/views/MyProfile/Profile';
 import WalkthroughView from './src/views/WalkthroughView';
 import CameraPermissionScreen from './src/components/CameraPermissionScreen';
-import CameraScreen from './src/components/CameraScreen';
+import CameraScreen from './src/components/CameraScreen.js';
 import ChooseCategory from './src/views/Authentication/ChooseCategory';
 
-// Define a custom theme with a blue primary color
 const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#1E88E5', // Set the primary color to blue
-    accent: '#0056b3', // Adjust the accent color if needed
+    primary: '#1E88E5',
+    accent: '#0056b3',
     gray: '#9E9E9E',
     secondaryContainer: 'transparent',
   },
@@ -57,7 +56,6 @@ const theme = {
 
 const Stack = createNativeStackNavigator();
 
-//clearImageCache();
 const App = () => {
   console.log('Starting App, environment:', APP_CONFIG.ENVIRONMENT);
   const dispatch = useDispatch();
@@ -81,7 +79,6 @@ const App = () => {
     }
     finally {
       setLoading(false);
-      // Mark that initial auth is complete
       setIsInitialAuth(false);
     }
   };
@@ -92,22 +89,19 @@ const App = () => {
       return;
     }
     
-    // Skip session refresh during initial authentication
     if (isInitialAuth) {
       console.log('[AuthRefresh] Skipping refresh during initial auth');
       return;
     }
     
-    // Check if sessionExpirationMinutes exists and is valid
     if (!authInfo.sessionExpirationMinutes || authInfo.sessionExpirationMinutes <= 0) {
       console.log('[AuthRefresh] No valid session expiration time, skipping refresh');
       return;
     }
     
     const sessionExpirationMillis = authInfo.sessionExpirationMinutes * 60 * 1000;
-    const delay = sessionExpirationMillis - 60 * 1000; // 1 minute before expiration
+    const delay = sessionExpirationMillis - 60 * 1000;
     
-    // Ensure delay is positive
     if (delay <= 0) {
       console.log('[AuthRefresh] Session expires too soon, skipping refresh');
       return;
@@ -272,49 +266,49 @@ const App = () => {
                     name="PieceDetail"
                     component={PieceDetail}
                     options={{
-                      headerShown: false, //
+                      headerShown: false,
                     }}
                   />
                   <Stack.Screen
                     name="UploadPieceImage"
                     component={UploadPieceImage}
                     options={{
-                      headerShown: false, //
+                      headerShown: false,
                     }}
                   />
                   <Stack.Screen
                     name="FitStylist"
                     component={FitStylist}
                     options={{
-                      headerShown: false, //
+                      headerShown: false,
                     }}
                   />
                   <Stack.Screen
                     name="AddEditCollection"
                     component={AddEditCollection}
                     options={{
-                      headerShown: false, //
+                      headerShown: false,
                     }}
                   />
                   <Stack.Screen
                     name="RevenueCat"
                     component={RevenueCat}
                     options={{
-                      headerShown: false, //
+                      headerShown: false, 
                     }}
                   />
                   <Stack.Screen
                     name={ScreenType.TERMS_OF_SERVICE}
                     component={TermsOfService}
                     options={{
-                      headerShown: false, //
+                      headerShown: false,
                     }}
                   />
                   <Stack.Screen
                     name={ScreenType.PRIVACY_POLICY}
                     component={PrivacyPolicy}
                     options={{
-                      headerShown: false, //
+                      headerShown: false,
                     }}
                   />
                 </Stack.Navigator>
@@ -327,17 +321,15 @@ const App = () => {
           </PaperProvider>
         }
       />
-      {/*<LoadingIndicator />*/}
     </SafeAreaProvider>
   );
 };
 
-// Define global styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 5, // Apply consistent padding
-    backgroundColor: '#fff', // Optional: Ensure background consistency
+    padding: 5,
+    backgroundColor: '#fff',
   },
 });
 

@@ -6,16 +6,15 @@ import {
     TouchableOpacity,
     SafeAreaView,
     Dimensions,
-    Alert,
     Platform,
 } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import CommonHeader from '../../components/CommonHeader';
 import COLORS from '../../const/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { navigate } from '../../navigation/navigationService';
 import FastImage from 'react-native-fast-image';
+import Button from '../../components/Button';
 
 interface MediaPermissionProps {
     navigation: any;
@@ -26,14 +25,23 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
     const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'not_determined'>('not_determined');
     const [photoLibraryPermission, setPhotoLibraryPermission] = useState<'granted' | 'denied' | 'not_determined'>('not_determined');
     const [emailImportEnabled, setEmailImportEnabled] = useState(false);
+    const [isValid, setIsValid] = useState(false);
 
     useEffect(() => {
         checkPermissions();
     }, []);
 
+    useEffect(() => {
+        const allGranted =
+            cameraPermission === 'granted' ||
+            photoLibraryPermission === 'granted' ||
+            emailImportEnabled;
+        setIsValid(allGranted ? true : false);
+    }, [cameraPermission, photoLibraryPermission, emailImportEnabled]);
+
+
     const checkPermissions = async () => {
         try {
-            // Check camera permission
             const cameraResult = await check(
                 Platform.select({
                     ios: PERMISSIONS.IOS.CAMERA,
@@ -41,8 +49,7 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
                 })!
             );
             setCameraPermission(cameraResult === RESULTS.GRANTED ? 'granted' : cameraResult === RESULTS.DENIED ? 'denied' : 'not_determined');
-
-            // Check photo library permission
+            
             const photoResult = await check(
                 Platform.select({
                     ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
@@ -91,7 +98,7 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
 
     const handleContinue = () => {
         onComplete?.();
-       navigate('Walkthrough');
+        navigate('Walkthrough');
     };
 
     const handleSkip = () => {
@@ -111,16 +118,15 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
         const buttonText = isGranted ? '✔️' : 'Allow';
         const buttonStyle = isGranted ? styles.allowedButton : styles.allowButton;
         const buttonTextStyle = isGranted ? styles.allowedButtonText : styles.allowButtonText;
-
         return (
             <View style={styles.permissionCard}>
                 <View style={styles.iconContainer}>
                     <View style={styles.iconStyle}>
-                    {showNewBadge ? (
-                        <FastImage source={require('../../assets/images/gmail.png')} style={{ width: 24, height: 24 }} />
-                    ) : (
-                        <Ionicons name={icon as any} size={24} color={COLORS.Black} />
-                    )}
+                        {showNewBadge ? (
+                            <FastImage source={require('../../assets/images/gmail.png')} style={{ width: 24, height: 24 }} />
+                        ) : (
+                            <Ionicons name={icon as any} size={24} color={COLORS.Black} />
+                        )}
                     </View>
                     {showNewBadge && (
                         <View style={styles.newBadgeContainer}>
@@ -185,14 +191,15 @@ const MediaPermission: React.FC<MediaPermissionProps> = ({ navigation, onComplet
                     true
                 )}
             </View>
-
-            <View style={[styles.bottomContainer, { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: COLORS.white, padding: 16 }]}>
-                <TouchableOpacity
-                    style={styles.continueButton}
+            <View style={styles.buttonWrapper}>
+                <Button
+                    title='Continue'
                     onPress={handleContinue}
-                >
-                    <Text style={styles.continueButtonText}>Continue</Text>
-                </TouchableOpacity>
+                    disabled={!isValid}
+                    buttonType={true}
+                    bgColor={isValid ? COLORS.Black : COLORS.whiteAlt}
+                    btnTextColor={isValid ? COLORS.whiteAlt : COLORS.grayInactive}
+                />
 
                 <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
                     <Text style={styles.skipButtonText}>Skip for now</Text>
@@ -213,6 +220,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         marginTop: Dimensions.get('window').height * 0.02
+    },
+    buttonWrapper: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        marginBottom: 20,width:'90%', alignSelf:'center'
     },
     content: {
         flex: 1,
@@ -253,7 +265,7 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end'
     },
     newBadgeContainer: {
-        borderWidth:1.5,
+        borderWidth: 1.5,
         borderColor: COLORS.tertiary,
         borderRadius: 5,
         paddingHorizontal: 7,
@@ -290,7 +302,7 @@ const styles = StyleSheet.create({
         color: 'gray',
     },
     bottomContainer: {
-        paddingHorizontal:15,
+        paddingHorizontal: 15,
     },
     continueButton: {
         backgroundColor: COLORS.Black,

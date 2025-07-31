@@ -249,7 +249,7 @@ const AuthView: React.FC = () => {
                     </Text>
                     <Text style={[ThemeStyle.body2, ThemeStyle.textBold, { color: COLORS.secondaryDarker }]}>
                         Terms of Service  <Text style={[ThemeStyle.body2, ThemeStyle.text]}>and
-                        </Text>{' '}Privacy Policy
+                        </Text>{'  '}Privacy Policy
                     </Text>
                 </View>
             </View>
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     },
     slideImage: {
         height: height * 0.5,
-        aspectRatio: 1 / 1.1,
+        aspectRatio: 1 / 1.07,
         alignSelf: 'center',
         resizeMode: 'contain'
     },

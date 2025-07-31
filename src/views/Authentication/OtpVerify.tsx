@@ -152,7 +152,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
                     dispatcher: dispatch,
                     onAuthenticate: (success: any) => {
                         if (success) {
-                            navigate('ChooseUsername');
+                            navigate('Profile');
                         } else {
                             createAccount(storedToken);
                         }
@@ -208,7 +208,7 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ navigation, route }) => {
             };
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
 
             const response = await fetch(`${API_CONFIG.SERVER_URL}/api/api/send`, {
                 method: 'POST',
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     buttonWrapper: {
         flex: 1,
         justifyContent: 'flex-end',
-        marginBottom: 20,
+        marginBottom: 20,width:'90%', alignSelf:'center'
     },
     errorContainer: {
         paddingHorizontal: 20,

@@ -8,13 +8,15 @@ import {
   StatusBar,
   Platform,
   Appearance,
+  KeyboardAvoidingView,
 } from 'react-native';
 import COLORS from '../const/colors';
 import ThemeStyle from '../const/ThemeStyle';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import CameraPermissionScreen from './CameraPermissionScreen';
-import CameraScreen from './CameraScreen';
+import CameraScreen from './CameraScreen.js';
+import Button from './Button';
 
 const { width, height } = Dimensions.get('window');
 
@@ -60,17 +62,8 @@ interface WalkthroughScreenProps {
 
 const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(Appearance.getColorScheme() === 'dark');
   const [showCameraPermission, setShowCameraPermission] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-
-  useEffect(() => {
-    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      setIsDarkMode(colorScheme === 'dark');
-    });
-
-    return () => subscription?.remove();
-  }, []);
 
   const handleNext = () => {
     if (currentStep < walkthroughSteps.length - 1) {
@@ -81,7 +74,8 @@ const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete }) => 
   };
 
   const handleCameraPermissionGranted = () => {
-    onComplete();
+    setShowCameraPermission(false);
+    setShowCamera(true);
   };
 
   const handleCameraPermissionBack = () => {
@@ -125,80 +119,80 @@ const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete }) => 
       <CameraPermissionScreen
         onPermissionGranted={handleCameraPermissionGranted}
         onBack={handleCameraPermissionBack}
-        onNavigateToCamera={handleNavigateToCamera}
       />
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? COLORS.Black : COLORS.white }}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar 
-          barStyle={isDarkMode ? "light-content" : "dark-content"} 
-          backgroundColor={isDarkMode ? COLORS.Black : COLORS.white} 
-          translucent={false} 
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+    >
+      <SafeAreaView style={ThemeStyle.mainContainer}>
+        <StatusBar
+          barStyle={"dark-content"}
+          backgroundColor={COLORS.white}
+          translucent={false}
         />
-          <View style={[styles.progressContainer]}>
-            {walkthroughSteps.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressDot,
-                  {
-                    backgroundColor: isDarkMode ? COLORS.white : COLORS.grayInactive,
-                    opacity: index === currentStep ? 1 : 0.5,
-                  },
-                  index === currentStep && {
-                    backgroundColor: isDarkMode ? COLORS.white : COLORS.Black,
-                  },
-                ]}
-              />
-            ))}
-          </View>
+        <View style={[styles.progressContainer]}>
+          {walkthroughSteps.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.progressDot,
+                {
+                  backgroundColor: COLORS.grayInactive,
+                  opacity: index === currentStep ? 1 : 0.5,
+                },
+                index === currentStep && {
+                  backgroundColor: COLORS.Black,
+                },
+              ]}
+            />
+          ))}
+        </View>
         <View style={styles.content}>
           <View style={styles.imageContainer}>
             <FastImage source={currentStepData.image} style={styles.image} resizeMode="contain" />
           </View>
 
           <View style={styles.iconContainer}>
-            <FastImage 
-              source={currentStepData.titleImage} 
-              style={styles.titleImage} 
-              resizeMode="contain" 
-              tintColor={!isDarkMode ? COLORS.Black : undefined}
+            <FastImage
+              source={currentStepData.titleImage}
+              style={styles.titleImage}
+              resizeMode="contain"
+              tintColor={COLORS.Black}
             />
           </View>
-          <Text style={[styles.title, { color: isDarkMode ? COLORS.white : COLORS.Black }]}>
+          <Text style={[styles.title, { color: COLORS.Black }]}>
             {currentStepData.title}
           </Text>
 
           <Text style={styles.description}>{currentStepData.description}</Text>
 
-            <View style={[styles.bottomSection]}>
-              <TouchableOpacity 
-                style={[
-                  styles.actionButton, 
-                  { 
-                    backgroundColor: COLORS.Black,
-                    borderWidth: isDarkMode ? 1 : 0,
-                    borderColor: COLORS.white
-                  }
-                ]} 
-                onPress={handleNext}
-              >
-                <Text style={[
-                  styles.actionButtonText, 
-                  { color: COLORS.white }
-                ]}>
-                  {currentStepData.buttonText}
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={[styles.bottomSection]}>
+            <Button
+              title={currentStepData.buttonText}
+              onPress={()=>{setShowCameraPermission(true)}}
+              textSize={{ fontSize: 14 }}
+              bgColor={COLORS.white}
+              btnTextColor={COLORS.white}
+              btnwidth={'90%'}
+              shadowProp={true}
+              primaryShadow={true}
+              stylesCss={styles.actionButton}
+            />
           </View>
+          <TouchableOpacity
+            style={styles.skipButton}
+          >
+            <Text style={styles.skipButtonText}>Skip for now</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.leftNavArea} onPress={handlePrevious} />
         <TouchableOpacity style={styles.rightNavArea} onPress={handleNext} />
       </SafeAreaView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -231,7 +225,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...ThemeStyle.H2,
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
   },
   description: {
@@ -239,7 +233,7 @@ const styles = StyleSheet.create({
     color: COLORS.secondaryDark,
     textAlign: 'center',
     lineHeight: 22,
-    fontSize: 16, width: '80%'
+    fontSize: 14, width: '90%'
   },
   bottomSection: {
     paddingHorizontal: 20,
@@ -267,12 +261,17 @@ const styles = StyleSheet.create({
   actionButton: {
     borderRadius: 25,
     padding: 12,
-    paddingHorizontal:18,
+    paddingHorizontal: 18,
     alignItems: 'center',
-    alignSelf: 'center'
+    alignSelf: 'center', backgroundColor: COLORS.Black
   },
-  actionButtonText: {
-    fontSize: 18,
+  skipButton: {
+    alignItems: 'center',
+    marginTop: Dimensions.get('window').height * 0.02,
+  },
+  skipButtonText: {
+    fontSize: 12,
+    color: 'gray',
     fontFamily: 'SFPRODISPLAYBOLD',
   },
   leftNavArea: {
@@ -291,7 +290,7 @@ const styles = StyleSheet.create({
   },
   titleImage: {
     width: '40%',
-    height: '40%',marginTop:10
+    height: '40%', marginTop: 10
   },
 });
 

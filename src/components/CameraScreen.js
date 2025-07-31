@@ -50,10 +50,21 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
   };
 
   const checkGalleryPermission = async () => {
+    console.log('Checking gallery permission...');
     if (Platform.OS === 'android') {
       try {
+        const androidVersion = Platform.Version;
+        console.log('Android version:', androidVersion);
+        
+        let permission;
+        if (androidVersion >= 33) {
+          permission = PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES;
+        } else {
+          permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+        }
+        
         const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+          permission,
           {
             title: 'Gallery Permission',
             message: 'This app needs access to your gallery to select photos.',
@@ -62,40 +73,60 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
             buttonPositive: 'OK',
           }
         );
+        console.log('Gallery permission result:', granted);
         setHasGalleryPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
       } catch (err) {
         console.warn('Gallery permission error:', err);
         setHasGalleryPermission(false);
       }
     } else {
+      console.log('iOS - setting gallery permission to true');
       setHasGalleryPermission(true);
     }
   };
 
   const openGallery = async () => {
-    if (!hasGalleryPermission) {
-      Alert.alert(
-        'Permission Required',
-        'Gallery permission is required to select photos. Please grant permission in settings.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Grant Permission', onPress: checkGalleryPermission },
-        ]
-      );
-      return;
-    }
+    console.log('openGallery called, hasGalleryPermission:', hasGalleryPermission);
+    
+    console.log('Launching image library...');
+    const options = {
+      mediaType: 'photo',
+      selectionLimit: 1,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      quality: 0.8,
+      includeBase64: false,
+    };
 
-    try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.8,
-        includeBase64: false,
-        maxWidth: 1920,
-        maxHeight: 1920,
-      });
-
-      if (result.assets && result.assets.length > 0) {
-        const selectedPhoto = result.assets[0];
+    const callback = (response) => {
+      console.log('Gallery response:', response);
+      
+      if (response.didCancel) {
+        console.log('User cancelled gallery selection');
+        return;
+      }
+      
+      if (response.errorMessage) {
+        console.error('Gallery error:', response.errorMessage);
+        if (response.errorMessage.includes('permission') || response.errorMessage.includes('Permission')) {
+          Alert.alert(
+            'Permission Required',
+            'Gallery permission is required to select photos. Please grant permission in settings.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Grant Permission', onPress: checkGalleryPermission },
+            ]
+          );
+        } else {
+          Alert.alert('Error', 'Failed to open gallery. Please try again.');
+        }
+        return;
+      }
+      
+      if (response.assets && response.assets.length > 0) {
+        const selectedPhoto = response.assets[0];
+        console.log('Selected photo:', selectedPhoto);
+        
         if (selectedPhoto.uri) {
           const photoData = {
             path: selectedPhoto.uri,
@@ -108,8 +139,12 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
           setScreenState('review');
         }
       }
+    };
+
+    try {
+      launchImageLibrary(options, callback);
     } catch (error) {
-      console.error('Error opening gallery:', error);
+      console.error('Error launching gallery:', error);
       Alert.alert('Error', 'Failed to open gallery. Please try again.');
     }
   };
@@ -408,7 +443,13 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
         </View>
 
         <View style={styles.cameraControls}>
-          <TouchableOpacity style={styles.galleryButton} onPress={openGallery}>
+          <TouchableOpacity 
+            style={styles.galleryButton} 
+            onPress={() => {
+              console.log('Gallery button pressed!');
+              openGallery();
+            }}
+          >
             <MaterialCommunityIcons name="image-multiple" size={24} color={COLORS.white} />
           </TouchableOpacity>
 

@@ -1,87 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   StatusBar,
-  Platform,
   Alert,
-  Linking,
 } from 'react-native';
-import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import COLORS from '../const/colors';
-import ThemeStyle from '../const/ThemeStyle';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
-const { width, height } = Dimensions.get('window');
+import { useCameraPermission } from '../utils/usePermission';
+import PermissionModal from './PermissionModal';
 
 interface CameraPermissionScreenProps {
   onPermissionGranted: () => void;
   onBack: () => void;
-  onNavigateToCamera: () => void;
 }
 
 const CameraPermissionScreen: React.FC<CameraPermissionScreenProps> = ({
   onPermissionGranted,
   onBack,
-  onNavigateToCamera,
 }) => {
-  const [permissionStatus, setPermissionStatus] = useState<'checking' | 'asking' | 'granted' | 'denied'>('checking');
   const [showCustomModal, setShowCustomModal] = useState(true);
+  const [openSettingsModal, setOpenSettingsModal] = useState(false);
 
-  useEffect(() => {
-    checkCameraPermission();
-  }, []);
-
-  const checkCameraPermission = async () => {
-    try {
-      const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.CAMERA : PERMISSIONS.ANDROID.CAMERA;
-      const result = await check(permission);
-      
-      if (result === RESULTS.GRANTED) {
-        setPermissionStatus('granted');
+  const {
+    status: permissionStatus,
+    isLoading,
+    request,
+    showSettingsAlert,
+    isBlocked,
+  } = useCameraPermission({
+    autoCheck: true,
+    autoRequest: false,
+    onStatusChange: (status) => {
+      if (status === 'granted' || status === 'limited') {
         onPermissionGranted();
-      } else {
-        setPermissionStatus('asking');
       }
-    } catch (error) {
-      console.error('Error checking camera permission:', error);
-      setPermissionStatus('asking');
-    }
-  };
+    },
+  });
 
   const handleAllowClick = async () => {
     setShowCustomModal(false);
-    try {
-      const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.CAMERA : PERMISSIONS.ANDROID.CAMERA;
-      const result = await request(permission);
-      
-      if (result === RESULTS.GRANTED) {
-        setPermissionStatus('granted');
-        onNavigateToCamera();
-      } else {
-        setPermissionStatus('denied');
-      }
-    } catch (error) {
-      console.error('Error requesting camera permission:', error);
-      setPermissionStatus('denied');
-    }
+    await request();
   };
 
   const handleDeclineClick = () => {
     setShowCustomModal(false);
-    setPermissionStatus('denied');
+    setOpenSettingsModal(true);
   };
 
-  const openSettings = () => {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('app-settings:');
-    } else {
-      Linking.openSettings();
-    }
+  const handleOpenSettings = () => {
+    showSettingsAlert();
   };
 
   const handleBack = () => {
@@ -95,9 +66,9 @@ const CameraPermissionScreen: React.FC<CameraPermissionScreenProps> = ({
     );
   };
 
-  if (permissionStatus === 'checking') {
+  if (isLoading || permissionStatus === 'checking') {
     return (
-      <View style={styles.container}>
+      <View style={styles.fullScreenContainer}>
         <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.loadingContainer}>
@@ -109,43 +80,20 @@ const CameraPermissionScreen: React.FC<CameraPermissionScreenProps> = ({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <MaterialCommunityIcons name="close" size={24} color={COLORS.white} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <MaterialCommunityIcons name="close" size={24} color={COLORS.white} />
+        </TouchableOpacity>
 
-        {/* Camera View Background */}
         <View style={styles.cameraBackground}>
-          {/* Gallery Icon */}
           <TouchableOpacity style={styles.galleryButton}>
             <MaterialCommunityIcons name="image-multiple" size={24} color={COLORS.white} />
           </TouchableOpacity>
         </View>
 
-        {/* Custom Permission Modal */}
-        {showCustomModal && (
-          <View style={styles.permissionModal}>
-            <Text style={styles.permissionTitle}>"Fitted" Would Like to Access the Camera</Text>
-            <Text style={styles.permissionDescription}>Snap photos of your pieces</Text>
-            
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.declineButton} onPress={handleDeclineClick}>
-                <Text style={styles.declineButtonText}>Decline</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.allowButton} onPress={handleAllowClick}>
-                <Text style={styles.allowButtonText}>Allow</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* Camera Access Denied Screen */}
-        {permissionStatus === 'denied' && (
+        {openSettingsModal && (
           <View style={styles.deniedOverlay}>
             <View style={styles.deniedContent}>
               <View style={styles.cameraIconContainer}>
@@ -154,24 +102,34 @@ const CameraPermissionScreen: React.FC<CameraPermissionScreenProps> = ({
               <Text style={styles.deniedText}>
                 Allow camera access. You'll be able to snap pictures of your pieces
               </Text>
-              <TouchableOpacity style={styles.settingsButton} onPress={openSettings}>
+              <TouchableOpacity style={styles.settingsButton} onPress={handleOpenSettings}>
                 <Text style={styles.settingsButtonText}>Open settings</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
       </SafeAreaView>
+
+      <PermissionModal
+        visible={showCustomModal && permissionStatus === 'denied'}
+        type="camera"
+        status={permissionStatus}
+        onAllow={handleAllowClick}
+        onDecline={handleDeclineClick}
+        onOpenSettings={handleOpenSettings}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
     backgroundColor: COLORS.Black,
   },
   safeArea: {
     flex: 1,
+    backgroundColor: COLORS.Black,
   },
   loadingContainer: {
     flex: 1,
@@ -202,47 +160,6 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 8,
-  },
-  permissionModal: {
-    position: 'absolute',
-    top: '50%',
-    left: 20,
-    right: 20,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    transform: [{ translateY: -100 }],
-  },
-  permissionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.Black,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  permissionDescription: {
-    fontSize: 16,
-    color: COLORS.secondaryDark,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  declineButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: COLORS.grayLight,
-  },
-  declineButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.Black,
-    textAlign: 'center',
   },
   allowButton: {
     flex: 1,

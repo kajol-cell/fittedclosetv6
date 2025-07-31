@@ -13,6 +13,7 @@ interface CommonHeaderProps {
     titleStyle?: any;
     subtitleStyle?: any;
 }
+const { width, height } = Dimensions.get('window');
 
 const CommonHeader: React.FC<CommonHeaderProps> = ({
     title,
@@ -91,8 +92,8 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 const styles = StyleSheet.create({
     simpleContainer: {
         width: '100%',
-        padding:20,
-        paddingTop: Dimensions.get('window').height * 0.06,
+        paddingHorizontal: width * 0.04,
+        paddingTop: height * 0.06,
     },
 
     simpleHeaderRow: {

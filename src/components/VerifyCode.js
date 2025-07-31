@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import COLORS from '../const/colors';
 import { HelperText } from 'react-native-paper';
+import ThemeStyle from '../const/ThemeStyle';
 
 const VerifyCode = ({ onResendCode, status, code, setCode, error, resetFocus }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -59,7 +60,7 @@ const VerifyCode = ({ onResendCode, status, code, setCode, error, resetFocus }) 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={ThemeStyle.container}
     >
 
       <View style={styles.inputContainer}>
@@ -113,15 +114,12 @@ const VerifyCode = ({ onResendCode, status, code, setCode, error, resetFocus }) 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.white, marginHorizontal: Dimensions.get('window').width * 0.05
-  },
   inputContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
+    marginTop:10, marginRight:10
   },
   inputBox: {
     width: 45,
@@ -154,22 +152,21 @@ const styles = StyleSheet.create({
     borderColor: COLORS.graySubtle,
     borderWidth: 1.2,
     borderRadius: 10,
-    marginBottom: 10, width: '45%', height: '8%',
-    justifyContent: 'center', alignItems: 'center',
-    marginTop: Dimensions.get('window').height * 0.02
+    width: '45%', height: '8%',
+    justifyContent: 'center', 
+    marginTop: Dimensions.get('window').height * 0.01,
   },
   sendCode: {
     borderRadius: 15,
-    marginBottom: 10, width: '40%', height: '8%',
+    marginBottom: 10, width: '35%', height: '8%',
     justifyContent: 'center', alignItems: 'center',
     marginTop: Dimensions.get('window').height * 0.02,
     backgroundColor: COLORS.whiteSoft,
   },
   resendButtonText: {
     color: COLORS.secondaryDark,
-    fontSize: 14,
-    fontWeight: '700',
-    fontFamily: 'SFPRODISPLAYREGULAR',
+    fontSize: 12,
+    fontFamily: 'SFPRODISPLAYBOLD', textAlign:'center'
   },
 });
 

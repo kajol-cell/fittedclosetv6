@@ -61,7 +61,6 @@ const EmailScreen: React.FC<EmailScreenProps> = ({ navigation }) => {
                 navigate('OtpVerify', { email: emailValue });
             },
             (error: any) => {
-                console.error('Failed to send code:', error);
                 Alert.alert('Login failed', error.message);
                 setLoading(false);
             },
@@ -160,7 +159,8 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         borderWidth: 0.8,
         borderColor: '#F5F5F5',
-        padding: 3,width:'90%', alignSelf:'center'
+        padding: 3,width:'100%', alignSelf:'center',
+        marginTop:10
     },
     emailInput: {
         flex: 1,
@@ -185,6 +185,6 @@ const styles = StyleSheet.create({
     buttonWrapper: {
         flex: 1,
         justifyContent: 'flex-end',
-        marginBottom: 20,
+        marginBottom: 20,width:'90%', alignSelf:'center'
     },
 });

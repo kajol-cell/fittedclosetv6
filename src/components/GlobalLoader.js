@@ -1,13 +1,30 @@
 // src/components/GlobalLoader.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { hideLoading } from '../redux/features/loadingSlice';
 
 const GlobalLoader = () => {
     const isLoading = useSelector(state => state.loading.isLoading);
+    const dispatch = useDispatch();
+    const [showLoader, setShowLoader] = useState(false);
 
-    if (!isLoading) return null;
+    useEffect(() => {
+        if (isLoading) {
+            setShowLoader(true);
+            const timeout = setTimeout(() => {
+                dispatch(hideLoading());
+                setShowLoader(false);
+            }, 3000);
+
+            return () => clearTimeout(timeout);
+        } else {
+            setShowLoader(false);
+        }
+    }, [isLoading, dispatch]);
+
+    if (!showLoader) return null;
 
     return (
         <View style={styles.overlay}>
@@ -23,7 +40,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 9999, // Make sure it's on top of all screens
+        zIndex: 9999,
     },
 });
 
