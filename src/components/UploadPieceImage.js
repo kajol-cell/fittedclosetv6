@@ -164,7 +164,7 @@ const UpdatePieceImage = ({route, navigation}) => {
             pieceInfos.forEach(pieceInfo => {
                 pieceInfo.newPiece = true;
                 pieceInfo.imageUrl =
-                    imageIdDateUrlMap[pieceInfo.imageId] || pieceInfo.imageUrl; // Update imageUrl directly
+                    imageIdDateUrlMap[pieceInfo.imageId] || pieceInfo.imageUrl;
             });
             dispatch(addPieces(pieceInfos));
             pieceInfos.forEach(pieceInfo => {

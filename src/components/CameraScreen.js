@@ -9,8 +9,6 @@ import {
   Alert,
   Image,
   ScrollView,
-  PermissionsAndroid,
-  Platform,
 } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -19,75 +17,47 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FastImage from 'react-native-fast-image';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { dispatchThunk } from '../utils/reduxUtils';
-import { callSessionApi } from '../redux/features/sessionSlice';
+import { callSessionApi, addPieces } from '../redux/features/sessionSlice';
 import { SessionMessageType } from '../utils/enums';
-import { resizeImageList, createImageUploadData } from '../utils/imageUtils';
+import { resizeImageList, createImageUploadData, createImageDataUrl } from '../utils/imageUtils';
+import { useCameraPermission, usePhotoLibraryPermission } from '../utils/usePermission';
+import CameraPermissionScreen from './CameraPermissionScreen';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
 
 const { width } = Dimensions.get('window');
 
 const CameraScreen = ({ onPhotoTaken, onBack }) => {
-  const [hasPermission, setHasPermission] = useState(false);
-  const [hasGalleryPermission, setHasGalleryPermission] = useState(false);
+  const dispatch = useDispatch();
   const [photo, setPhoto] = useState(null);
   const [screenState, setScreenState] = useState('camera');
   const [pieceData, setPieceData] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
+
+
   const camera = useRef(null);
   const devices = useCameraDevices();
   const device = devices.find((d) => d.position === 'back');
 
-  React.useEffect(() => {
-    checkPermissions();
-  }, []);
+  const {
+    isLoading: cameraPermissionLoading,
+    isGranted: isCameraGranted,
+  } = useCameraPermission({
+    autoCheck: true,
+    autoRequest: false,
+  });
 
-  const checkPermissions = async () => {
-    const cameraPermission = await Camera.requestCameraPermission();
-    setHasPermission(cameraPermission === 'granted');
-    
-    await checkGalleryPermission();
-  };
-
-  const checkGalleryPermission = async () => {
-    console.log('Checking gallery permission...');
-    if (Platform.OS === 'android') {
-      try {
-        const androidVersion = Platform.Version;
-        console.log('Android version:', androidVersion);
-        
-        let permission;
-        if (androidVersion >= 33) {
-          permission = PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES;
-        } else {
-          permission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
-        }
-        
-        const granted = await PermissionsAndroid.request(
-          permission,
-          {
-            title: 'Gallery Permission',
-            message: 'This app needs access to your gallery to select photos.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        console.log('Gallery permission result:', granted);
-        setHasGalleryPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
-      } catch (err) {
-        console.warn('Gallery permission error:', err);
-        setHasGalleryPermission(false);
-      }
-    } else {
-      console.log('iOS - setting gallery permission to true');
-      setHasGalleryPermission(true);
-    }
-  };
+  const {
+    showSettingsAlert: showGallerySettingsAlert,
+    isGranted: isGalleryGranted,
+  } = usePhotoLibraryPermission({
+    autoCheck: false,
+    autoRequest: false,
+  });
 
   const openGallery = async () => {
-    console.log('openGallery called, hasGalleryPermission:', hasGalleryPermission);
-    
+    console.log('openGallery called, hasGalleryPermission:', isGalleryGranted);
+
     console.log('Launching image library...');
     const options = {
       mediaType: 'photo',
@@ -100,12 +70,12 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
 
     const callback = (response) => {
       console.log('Gallery response:', response);
-      
+
       if (response.didCancel) {
         console.log('User cancelled gallery selection');
         return;
       }
-      
+
       if (response.errorMessage) {
         console.error('Gallery error:', response.errorMessage);
         if (response.errorMessage.includes('permission') || response.errorMessage.includes('Permission')) {
@@ -114,7 +84,7 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
             'Gallery permission is required to select photos. Please grant permission in settings.',
             [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Grant Permission', onPress: checkGalleryPermission },
+              { text: 'Grant Permission', onPress: () => showGallerySettingsAlert() },
             ]
           );
         } else {
@@ -122,11 +92,11 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
         }
         return;
       }
-      
+
       if (response.assets && response.assets.length > 0) {
         const selectedPhoto = response.assets[0];
         console.log('Selected photo:', selectedPhoto);
-        
+
         if (selectedPhoto.uri) {
           const photoData = {
             path: selectedPhoto.uri,
@@ -152,9 +122,7 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
   const takePhoto = async () => {
     if (camera.current) {
       try {
-        const photo = await camera.current.takePhoto({
-          flash: 'off',
-        });
+        const photo = await camera.current.takePhoto({ flash: 'off' });
         setPhoto(photo);
         setScreenState('review');
       } catch (error) {
@@ -172,14 +140,6 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
   const uploadPhotoForAnalysis = async (photo) => {
     try {
       setLoadingProgress(0);
-
-      const getImageDimensions = (uri) => {
-        return new Promise((resolve, reject) => {
-          Image.getSize(uri, (width, height) => {
-            resolve({ width: width, height: height });
-          }, reject);
-        });
-      };
 
       const photoUri = getPhotoUri(photo);
       const dimensions = await getImageDimensions(photoUri);
@@ -201,11 +161,14 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
         return acc;
       }, {});
 
-      const responseData = await dispatchThunk(
-        callSessionApi,
-        SessionMessageType.IMAGE_UPLOAD_INFO,
-        fileMap
-      );
+      console.log('Requesting upload info with fileMap:', fileMap);
+      const responseData = await dispatch(
+        callSessionApi({
+          messageType: SessionMessageType.IMAGE_UPLOAD_INFO,
+          payload: fileMap
+        })
+      ).unwrap();
+      console.log('Upload info response:', responseData);
       setLoadingProgress(50);
 
       const uploadPromises = resizedImages.map(img => {
@@ -231,11 +194,14 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
         fileSize: img.fileSize,
       }));
 
-      const pieceUploadInfo = await dispatchThunk(
-        callSessionApi,
-        SessionMessageType.SUBMIT_PIECE_PHOTOS,
-        { photos: fittedImages }
-      );
+      console.log('Submitting piece photos with fittedImages:', fittedImages);
+      const pieceUploadInfo = await dispatch(
+        callSessionApi({
+          messageType: SessionMessageType.SUBMIT_PIECE_PHOTOS,
+          payload: { photos: fittedImages }
+        })
+      ).unwrap();
+      console.log('Piece upload info response:', pieceUploadInfo);
       setLoadingProgress(100);
 
       return pieceUploadInfo;
@@ -249,16 +215,35 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
     try {
       setScreenState('loading');
       const pieceUploadInfo = await uploadPhotoForAnalysis(photo);
-      setPieceData(pieceUploadInfo.pieceInfos[0]);
+      
+      if (!pieceUploadInfo || !pieceUploadInfo.pieceInfos || pieceUploadInfo.pieceInfos.length === 0) {
+        throw new Error('No piece data received from server');
+      }
+      
+      const pieceInfo = pieceUploadInfo.pieceInfos[0];
+      console.log('Piece data received:', pieceInfo);
+      
+      // Create local image URL for display
+      const photoUri = getPhotoUri(photo);
+      pieceInfo.imageUrl = photoUri;
+      pieceInfo.newPiece = true;
+      
+      setPieceData(pieceInfo);
       setScreenState('pieceReview');
     } catch (error) {
+      console.error('Error in usePhoto:', error);
       Alert.alert('Error', 'Failed to analyze photo. Please try again.');
       setScreenState('review');
     }
   };
 
   const addToCloset = () => {
-    onPhotoTaken(pieceData);
+    if (pieceData) {
+      // Add the piece to the Redux store
+      dispatch(addPieces([pieceData]));
+      // Call the callback to notify parent component
+      onPhotoTaken(pieceData);
+    }
   };
 
   const handleBack = () => {
@@ -271,20 +256,164 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
           { text: 'Go Back', style: 'destructive', onPress: onBack },
         ]
       );
-    } else if (screenState === 'pieceReview') {
-      onBack();
     } else {
       onBack();
     }
   };
 
-  if (!hasPermission) {
+  const renderHeader = (title, onBackPress, showMore = false) => (
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
+        <Ionicons
+          name="chevron-back"
+          size={22}
+          color={screenState === 'pieceReview' ? COLORS.Black : COLORS.white}
+        />
+      </TouchableOpacity>
+      {title && (
+        <View style={styles.headerTextContainer}>
+          <Text style={[styles.headerText, { color: COLORS.Black }]}>{title}</Text>
+        </View>
+      )}
+      {showMore && (
+        <TouchableOpacity style={styles.moreButton}>
+          <MaterialCommunityIcons name="dots-horizontal" size={24} color={COLORS.Black} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderLoadingScreen = () => (
+    <View style={styles.fullScreenContainer}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
+      <SafeAreaView style={styles.safeArea}>
+        {renderHeader('', handleBack)}
+        <View style={styles.photoContainer}>
+          <FastImage
+            source={{ uri: getPhotoUri(photo) }}
+            style={styles.capturedPhoto}
+            resizeMode="cover"
+          />
+          <View style={styles.loadingOverlay}>
+            <Text style={styles.loadingText}>Cleaning & tagging this piece...</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${loadingProgress}%` }]} />
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+
+  const renderPieceReview = () => (
+    <View style={[styles.fullScreenContainer, { backgroundColor: COLORS.white }]}>
+      <SafeAreaView style={styles.safeArea}>
+        {renderHeader(pieceData?.name || 'Piece Details', handleBack, true)}
+        <ScrollView style={styles.pieceReviewContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.pieceImageContainer}>
+            <FastImage
+              source={{ uri: pieceData?.imageUrl || getPhotoUri(photo) }}
+              style={styles.pieceImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.pieceDetailsContainer}>
+            <DetailItem label="Piece Name" value={pieceData?.name || 'Untitled Piece'} />
+            <DetailItem label="Brand" value={getTagValue(pieceData, 'Brand')} />
+            <DetailItem label="Price" value={getTagValue(pieceData, 'Estimated Original Price')} />
+            <DetailItem label="Type" value={getTagValue(pieceData, 'Type')} />
+            <DetailItem label="Size" value={getTagValue(pieceData, 'Size')} />
+            <DetailItem label="Layer Type" value={pieceData?.garmentLayerType || 'Outer'} />
+            <DetailItem label="Category" value={getTagValue(pieceData, 'Category')} />
+            <DetailItem label="Color" value={getTagValue(pieceData, 'Color')} />
+            <DetailItem label="Condition" value={getTagValue(pieceData, 'Condition') || 'Used'} />
+          </View>
+        </ScrollView>
+        <View style={styles.addToClosetButton}>
+          <TouchableOpacity style={styles.addButton} onPress={addToCloset}>
+            <Text style={styles.addButtonText}>Add to closet</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+
+  const renderPhotoReview = () => (
+    <View style={styles.fullScreenContainer}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
+      <SafeAreaView style={styles.safeArea}>
+        {renderHeader('', handleBack)}
+        <View style={styles.photoContainer}>
+          <FastImage
+            source={{ uri: getPhotoUri(photo) }}
+            style={styles.capturedPhoto}
+            resizeMode="cover"
+          />
+        </View>
+        <View style={styles.reviewControls}>
+          <TouchableOpacity style={styles.retakeButton} onPress={retakePhoto}>
+            <MaterialCommunityIcons name="delete" size={20} color={COLORS.white} />
+            <Text style={styles.retakeButtonText}>Retake photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.usePhotoButton} onPress={usePhoto}>
+            <MaterialCommunityIcons name="check" size={20} color={COLORS.Black} />
+            <Text style={styles.usePhotoButtonText}>Use photo</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+
+  const renderCameraScreen = () => (
+    <View style={styles.fullScreenContainer}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
+      <Camera
+        ref={camera}
+        style={styles.fullScreenCamera}
+        device={device}
+        isActive={true}
+        photo={true}
+      />
+      <SafeAreaView style={styles.overlayContainer}>
+        {renderHeader('', handleBack)}
+        <View style={styles.cropOverlay}>
+          <View style={styles.topOverlay} />
+          <View style={styles.middleRow}>
+            <View style={styles.sideOverlay} />
+            <View style={styles.cropFrame} />
+            <View style={styles.sideOverlay} />
+          </View>
+          <View style={styles.bottomOverlay} />
+        </View>
+        <View style={styles.cameraControls}>
+          <TouchableOpacity style={styles.galleryButton} onPress={openGallery}>
+            <MaterialCommunityIcons name="image-multiple" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.shutterButton} onPress={takePhoto}>
+            <View style={styles.shutterButtonInner} />
+          </TouchableOpacity>
+          <View style={styles.placeholder} />
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+
+  if (!isCameraGranted && !cameraPermissionLoading) {
+    return (
+      <CameraPermissionScreen
+        onPermissionGranted={() => { }}
+        onBack={onBack}
+      />
+    );
+  }
+
+  if (cameraPermissionLoading) {
     return (
       <View style={styles.fullScreenContainer}>
         <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.permissionContainer}>
-            <Text style={styles.permissionText}>Camera permission is required</Text>
+            <Text style={styles.permissionText}>Checking permissions...</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -304,175 +433,31 @@ const CameraScreen = ({ onPhotoTaken, onBack }) => {
     );
   }
 
-  if (screenState === 'loading') {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-              <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.photoContainer}>
-            <FastImage
-              source={{ uri: getPhotoUri(photo) }}
-              style={styles.capturedPhoto}
-              resizeMode="cover"
-            />
-            <View style={styles.loadingOverlay}>
-              <Text style={styles.loadingText}>Cleaning & tagging this piece...</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${loadingProgress}%` }]} />
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (screenState === 'pieceReview' && pieceData) {
-    return (
-      <View style={[styles.fullScreenContainer, {backgroundColor: COLORS.white}]}>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-              <Ionicons name="chevron-back" size={22} color={COLORS.Black} />
-            </TouchableOpacity>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerText}>{pieceData.name}</Text>
-            </View>
-            <TouchableOpacity style={styles.moreButton}>
-              <MaterialCommunityIcons name="dots-horizontal" size={24} color={COLORS.Black} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.pieceReviewContainer}>
-            <View style={styles.pieceImageContainer}>
-              <FastImage
-                source={{ uri: pieceData.imageUrl }}
-                style={styles.pieceImage}
-                resizeMode="contain"
-              />
-            </View>
-
-            <View style={styles.pieceDetailsContainer}>
-              <DetailItem label="Piece Name" value={pieceData.name} />
-              <DetailItem label="Brand" value={getTagValue(pieceData, 'Brand')} />
-              <DetailItem label="Price" value={getTagValue(pieceData, 'Estimated Original Price')} />
-              <DetailItem label="Type" value={getTagValue(pieceData, 'Type')} />
-              <DetailItem label="Size" value={getTagValue(pieceData, 'Size')} />
-              <DetailItem label="Layer Type" value={pieceData.garmentLayerType || 'Outer'} />
-              <DetailItem label="Category" value={getTagValue(pieceData, 'Category')} />
-              <DetailItem label="Color" value={getTagValue(pieceData, 'Color')} />
-              <DetailItem label="Condition" value={getTagValue(pieceData, 'Condition') || 'Used'} />
-            </View>
-          </ScrollView>
-
-          <View style={styles.addToClosetButton}>
-            <TouchableOpacity style={styles.addButton} onPress={addToCloset}>
-              <Text style={styles.addButtonText}>Add to closet</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (screenState === 'review' && photo) {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-              <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.photoContainer}>
-            <FastImage
-              source={{ uri: getPhotoUri(photo) }}
-              style={styles.capturedPhoto}
-              resizeMode="cover"
-            />
-          </View>
-
-          <View style={styles.reviewControls}>
-            <TouchableOpacity style={styles.retakeButton} onPress={retakePhoto}>
-              <MaterialCommunityIcons name="delete" size={20} color={COLORS.white} />
-              <Text style={styles.retakeButtonText}>Retake photo</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.usePhotoButton} onPress={usePhoto}>
-              <MaterialCommunityIcons name="check" size={20} color={COLORS.Black} />
-              <Text style={styles.usePhotoButtonText}>Use photo</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.fullScreenContainer}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.Black} />
-      <Camera
-        ref={camera}
-        style={styles.fullScreenCamera}
-        device={device}
-        isActive={true}
-        photo={true}
-      />
-
-      <SafeAreaView style={styles.overlayContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={handleBack}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.white} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.cropOverlay}>
-          <View style={styles.topOverlay} />
-          <View style={styles.middleRow}>
-            <View style={styles.sideOverlay} />
-            <View style={styles.cropFrame} />
-            <View style={styles.sideOverlay} />
-          </View>
-          <View style={styles.bottomOverlay} />
-        </View>
-
-        <View style={styles.cameraControls}>
-          <TouchableOpacity 
-            style={styles.galleryButton} 
-            onPress={() => {
-              console.log('Gallery button pressed!');
-              openGallery();
-            }}
-          >
-            <MaterialCommunityIcons name="image-multiple" size={24} color={COLORS.white} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.shutterButton} onPress={takePhoto}>
-            <View style={styles.shutterButtonInner} />
-          </TouchableOpacity>
-
-          <View style={styles.placeholder} />
-        </View>
-      </SafeAreaView>
-    </View>
+    <>
+      {screenState === 'loading' && renderLoadingScreen()}
+      {screenState === 'pieceReview' && pieceData && renderPieceReview()}
+      {screenState === 'review' && photo && renderPhotoReview()}
+      {screenState === 'camera' && renderCameraScreen()}
+    </>
   );
 };
 
-const DetailItem = ({ label, value }) => (
-  <View style={styles.detailItem}>
-    <View style={styles.detailLabelContainer}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <MaterialCommunityIcons name="check-circle" size={16} color={COLORS.primary} />
+const DetailItem = ({ label, value, isEditable = true }) => (
+  <View >
+    <View style={styles.detailRow}>
+      <View style={styles.detailContent}>
+        <Text style={styles.detailLabel}>{label}: </Text>
+      </View>
+
+      {isEditable && (
+        <TouchableOpacity onPress={() => { }} style={styles.editButton}>
+          <Text style={styles.detailValue}>{value || 'Not detected'}</Text>
+          <MaterialCommunityIcons name="pencil" size={16} color={COLORS.Black} />
+        </TouchableOpacity>
+      )}
     </View>
-    <Text style={styles.detailValue}>{value || 'Not detected'}</Text>
+    <View style={styles.separator} />
   </View>
 );
 
@@ -482,13 +467,17 @@ const getTagValue = (pieceData, tagName) => {
 };
 
 const getPhotoUri = (photo) => {
-  if (photo.path) {
-    return `file://${photo.path}`;
-  }
-  if (photo.uri) {
-    return photo.uri;
-  }
+  if (photo.path) return `file://${photo.path}`;
+  if (photo.uri) return photo.uri;
   return photo.path || '';
+};
+
+const getImageDimensions = (uri) => {
+  return new Promise((resolve, reject) => {
+    Image.getSize(uri, (width, height) => {
+      resolve({ width, height });
+    }, reject);
+  });
 };
 
 const styles = StyleSheet.create({
@@ -527,14 +516,21 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     zIndex: 10,
   },
-  closeButton: {
-    padding: 8,
-  },
   backButton: {
     padding: 8,
   },
   moreButton: {
     padding: 8,
+  },
+  headerTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerText: {
+    fontSize: 18,
+    fontFamily: 'SFPRODISPLAYREGULAR',
+    textAlign: 'center',
   },
   cropOverlay: {
     flex: 1,
@@ -677,6 +673,7 @@ const styles = StyleSheet.create({
   pieceImageContainer: {
     alignItems: 'center',
     paddingVertical: 20,
+    backgroundColor: COLORS.grayBackground,
   },
   pieceImage: {
     width: width * 0.8,
@@ -684,26 +681,38 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   pieceDetailsContainer: {
-    paddingHorizontal: 20,
     paddingBottom: 100,
+    backgroundColor: COLORS.white,
   },
-  detailItem: {
-    marginBottom: 20,
-  },
-  detailLabelContainer: {
+  detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    padding:10,justifyContent:'space-between'
+  },
+  detailContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.grayInactive,
-    marginRight: 8,
+    fontFamily: 'SFPRODISPLAYBOLD',
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: 12,
     color: COLORS.Black,
-    fontFamily: 'SFPRODISPLAYMEDIUM',
+    fontFamily: 'SFPRODISPLAYBOLD',
+  },
+  editButton: {
+    flexDirection: 'row', 
+    backgroundColor: COLORS.whiteLight,
+    borderRadius: 20, 
+    padding: 7,
+    alignItems: 'center',gap:8,marginRight:'20%'
+  },
+  separator: {
+    height: 0.5,
+    backgroundColor: COLORS.separator,
   },
   addToClosetButton: {
     position: 'absolute',
@@ -723,17 +732,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontFamily: 'SFPRODISPLAYBOLD',
-  },
-  headerText: {
-    fontSize: 18,
-    fontFamily: 'SFPRODISPLAYREGULAR',
-    color: COLORS.Black,
-    textAlign: 'center',
-  },
-  headerTextContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

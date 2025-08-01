@@ -62,12 +62,17 @@ const AddEditCollection = ({route, navigation}) => {
             SessionMessageType.SAVE_FIT_COLL,
             saveFitCollInfo,
             responsePayload => {
-                dispatch(updateFitColl(responsePayload));
-                if (newFitColl) {
-                    trackCollectionCreate(responsePayload.id, responsePayload.name);
+                if (responsePayload) {
+                    dispatch(updateFitColl(responsePayload));
+                    if (newFitColl && responsePayload.id && responsePayload.name) {
+                        trackCollectionCreate(responsePayload.id, responsePayload.name);
+                    }
+                    closeModal();
+                    showNotification('Collection saved successfully!');
+                } else {
+                    console.warn('Response payload is null/undefined');
+                    showNotification('Failed to save collection');
                 }
-                closeModal();
-                showNotification('Collection saved successfully!');
             },
         );
     }

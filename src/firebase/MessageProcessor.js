@@ -57,17 +57,21 @@ function trackAddPiecesToCloset(pieces) {
 // Individual handlers
 async function handlePiecesReceived(message, dispatch) {
   console.log('[Processor] Handling PIECES_RECEIVED');
-  //const pieces = await RemoteServiceUtil.getPieces(); // your backend call
+  //const pieces = await RemoteServiceUtil.getPieces(); // backend call
   showNotification('Closet updated with new pieces');
-  dispatchThunk(
+      dispatchThunk(
     callSessionApi,
     SessionMessageType.RECEIVED_PIECES,
     {},
     responsePayload => {
       console.log('Response from callSessionApi:', responsePayload);
-      let pieces = responsePayload.pieces;
-      dispatch(updatePieces(pieces));
-      trackAddPiecesToCloset(pieces);
+      if (responsePayload && responsePayload.pieces) {
+        let pieces = responsePayload.pieces;
+        dispatch(updatePieces(pieces));
+        trackAddPiecesToCloset(pieces);
+      } else {
+        console.warn('Response payload or pieces is null/undefined:', responsePayload);
+      }
     },
     error => {
       console.error('Error from callSessionApi:', error);

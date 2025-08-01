@@ -38,12 +38,11 @@ const ProfileView = () => {
     const editProfileRef = useRef();
     const profile = useSelector(state => state.session.authInfo?.profile || {});
     const profilePublic = useSelector(state => state.session.authInfo?.profile?.profilePublic || false);
-    console.log('ProfileView Rendered', profile.imageUrl);
     const openAppSettings = () => {
         if (Platform.OS === 'ios') {
             Linking.openURL('app-settings:');
         } else {
-            Linking.openSettings(); // Works on Android
+            Linking.openSettings(); 
         }
     };
 
@@ -106,7 +105,7 @@ const ProfileView = () => {
                     showNotification('Account deleted successfully!');
                 },
                 responsePayload => {
-                    Alert.alert(responsePayload.message);
+                    Alert.alert(responsePayload?.message || 'An error occurred');
                 }
             );
         });
@@ -129,7 +128,7 @@ const ProfileView = () => {
                 }
             },
             responsePayload => {
-                Alert.alert(responsePayload.message);
+                Alert.alert(responsePayload?.message || 'An error occurred');
             },
         );
         console.log(
